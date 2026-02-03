@@ -1,0 +1,5 @@
+{
+  "name": "CineMatch",
+  "description": "A multiplayer movie-matching application where friends swipe to find the perfect film to watch together.",
+  "requestFramePermissions": []
+}

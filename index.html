@@ -1,0 +1,110 @@
+
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    
+    <!-- SEO Meta Tags -->
+    <title>CineMatch - Encuentra tu película perfecta con amigos</title>
+    <meta name="description" content="CineMatch es la app para elegir películas en grupo. Haz swipe, vota con amigos y encuentra el match perfecto para ver. ¡Deja de hacer scroll y empieza a ver!" />
+    <meta name="keywords" content="películas, cine, match, amigos, votación, streaming, Netflix, ver películas" />
+    <meta name="author" content="CineMatch" />
+    
+    <!-- Open Graph / Social Media -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="CineMatch - Encuentra tu película perfecta" />
+    <meta property="og:description" content="Vota películas con amigos y encuentra el match perfecto para ver juntos." />
+    <meta property="og:image" content="/og-image.png" />
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="CineMatch" />
+    <meta name="twitter:description" content="Encuentra tu película perfecta con amigos" />
+    
+    <!-- Theme Color -->
+    <meta name="theme-color" content="#0f0f1a" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'><stop offset='0%25' stop-color='%236366f1'/><stop offset='100%25' stop-color='%238b5cf6'/></linearGradient></defs><circle cx='50' cy='50' r='45' fill='url(%23g)'/><rect x='30' y='25' width='40' height='50' rx='5' fill='white'/><circle cx='50' cy='50' r='12' fill='%236366f1'/><circle cx='50' cy='50' r='4' fill='white'/></svg>" />
+    
+    <!-- Scripts -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+    
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              background: '#0f0f1a',
+              foreground: '#f8fafc',
+              primary: '#6366f1',
+              secondary: '#14b8a6',
+              card: 'rgba(30, 30, 50, 0.8)',
+              muted: 'rgba(255, 255, 255, 0.08)',
+              'muted-foreground': '#94a3b8',
+              border: 'rgba(255, 255, 255, 0.1)',
+              input: 'rgba(255, 255, 255, 0.08)',
+              ring: '#6366f1',
+            },
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+              display: ['Poppins', 'sans-serif'],
+            },
+            animation: {
+              'float': 'float 3s ease-in-out infinite',
+              'pulse-glow': 'pulse-glow 2s ease-in-out infinite',
+            },
+            keyframes: {
+              float: {
+                '0%, 100%': { transform: 'translateY(0)' },
+                '50%': { transform: 'translateY(-10px)' },
+              },
+              'pulse-glow': {
+                '0%, 100%': { boxShadow: '0 0 20px rgba(99, 102, 241, 0.4)' },
+                '50%': { boxShadow: '0 0 40px rgba(99, 102, 241, 0.6)' },
+              }
+            }
+          }
+        }
+      }
+    </script>
+    
+    <script type="importmap">
+      {
+        "imports": {
+          "react": "https://esm.sh/react@^19.2.4",
+          "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+          "react/": "https://esm.sh/react@^19.2.4/",
+          "lucide-react": "https://esm.sh/lucide-react@^0.563.0",
+          "react-router-dom": "https://esm.sh/react-router-dom@^7.13.0",
+          "framer-motion": "https://esm.sh/framer-motion@^12.29.2"
+        }
+      }
+    </script>
+    
+    <link rel="stylesheet" href="/index.css">
+    
+    <style>
+      /* Prevent overscroll bounce on iOS */
+      html, body {
+        overscroll-behavior: none;
+        -webkit-overflow-scrolling: touch;
+      }
+      
+      /* Custom selection color */
+      ::selection {
+        background: rgba(99, 102, 241, 0.3);
+        color: white;
+      }
+    </style>
+  </head>
+  <body class="bg-background text-foreground antialiased">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>
