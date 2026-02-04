@@ -26,7 +26,7 @@ const HomePage: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-[100dvh] flex flex-col items-center justify-center p-6 relative overflow-hidden">
+    <div className="h-[100dvh] flex flex-col items-center justify-center p-6 relative overflow-hidden">
       {/* Animated Background */}
       <div className="animated-bg">
         <div className="floating-orb orb-1" />
@@ -54,28 +54,29 @@ const HomePage: React.FC = () => {
       >
         {/* Logo */}
         <motion.div 
-          className="relative mb-8"
+          className="relative mb-6 md:mb-8"
           initial={{ scale: 0.5, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
         >
-          <div className="w-28 h-28 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-[2rem] flex items-center justify-center shadow-2xl glow-primary animate-float">
-            <Film className="w-14 h-14 text-white drop-shadow-lg" />
+          <div className="w-24 h-24 md:w-32 md:h-32 bg-gradient-to-br from-indigo-500 via-violet-500 to-fuchsia-500 rounded-[2rem] md:rounded-[2.5rem] flex items-center justify-center shadow-2xl shadow-indigo-500/40 animate-float relative overflow-hidden group">
+            <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            <Film className="w-12 h-12 md:w-16 md:h-16 text-white drop-shadow-xl z-10" />
           </div>
           {/* Decorative rings */}
-          <div className="absolute inset-0 rounded-[2rem] border-2 border-white/20 scale-110 animate-pulse" />
-          <div className="absolute inset-0 rounded-[2rem] border border-white/10 scale-125" />
+          <div className="absolute inset-0 rounded-[2rem] md:rounded-[2.5rem] border-2 border-white/10 scale-110 animate-pulse-glow" />
+          <div className="absolute inset-0 rounded-[2rem] md:rounded-[2.5rem] border border-white/5 scale-125 opacity-50" />
         </motion.div>
 
         {/* Title */}
         <motion.h1 
-          className="text-5xl md:text-6xl font-bold text-center mb-3 tracking-tight"
+          className="text-5xl md:text-7xl font-black text-center mb-3 md:mb-4 tracking-tighter drop-shadow-2xl"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <span className="text-white">Cine</span>
-          <span className="text-gradient">Match</span>
+          <span className="bg-clip-text text-transparent bg-gradient-to-b from-white to-slate-400">Cine</span>
+          <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400">Match</span>
         </motion.h1>
 
         {/* Tagline */}

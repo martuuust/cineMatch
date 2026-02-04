@@ -118,7 +118,7 @@ export class TMDBService {
                         posterPath: `${TMDB_IMAGE_BASE}${tmdbMovie.poster_path}`,
                         rating: Math.round(tmdbMovie.vote_average * 10) / 10,
                         duration: details?.runtime || 120,
-                        genres: this.mapGenres(tmdbMovie.genre_ids || []),
+                        genres: this.mapGenres(tmdbMovie.genre_ids || [], []),
                         overview: tmdbMovie.overview || details?.fallbackOverview || 'Sin descripción disponible.',
                         releaseYear: tmdbMovie.release_date
                             ? parseInt(tmdbMovie.release_date.split('-')[0])
@@ -225,14 +225,51 @@ export class TMDBService {
         if (!this.isConfigured()) return [];
 
         try {
-            // Join with comma (,) for AND logic (must have all genres)
-            const genreParam = genreIds.join(',');
-            const url = `${this.baseUrl}/discover/movie?api_key=${this.apiKey}&language=es-ES&with_genres=${genreParam}&sort_by=popularity.desc`;
-            const response = await fetch(url);
+            // Join with pipe (|) for OR logic (can have any of the genres)
+            const genreParam = genreIds.join('|');
+            
+            // Strategy:
+            // 1. Try a random page from 1 to 20 to ensure good variety
+            // 2. If that page is empty (out of bounds), use the total_pages info from response to pick a valid random page
+            // 3. Fallback to page 1 as last resort
+            
+            let page = Math.floor(Math.random() * 20) + 1;
+            console.log(`[TMDB] Genres: ${genreIds.join(',')}, Trying random page: ${page}`);
+            
+            let url = `${this.baseUrl}/discover/movie?api_key=${this.apiKey}&language=es-ES&with_genres=${genreParam}&sort_by=popularity.desc&include_adult=false&include_video=false&page=${page}`;
+            let response = await fetch(url);
+            let data = await response.json() as TMDBResponse;
 
-            if (!response.ok) return [];
+            // Check if we got results
+            if (!data.results || data.results.length === 0) {
+                console.log(`[TMDB] Page ${page} was empty.`);
+                
+                // If we have total_pages info, pick a valid random page
+                if (data.total_pages && data.total_pages > 0) {
+                    const maxPage = Math.min(data.total_pages, 50); // Cap at 50 to ensure relevance
+                    const newPage = Math.floor(Math.random() * maxPage) + 1;
+                    
+                    if (newPage !== page) {
+                        console.log(`[TMDB] Retrying with valid random page: ${newPage} (Total pages: ${data.total_pages})`);
+                        url = `${this.baseUrl}/discover/movie?api_key=${this.apiKey}&language=es-ES&with_genres=${genreParam}&sort_by=popularity.desc&include_adult=false&include_video=false&page=${newPage}`;
+                        response = await fetch(url);
+                        data = await response.json() as TMDBResponse;
+                    }
+                }
+                
+                // Final fallback to page 1 if still empty
+                if (!data.results || data.results.length === 0) {
+                    console.log(`[TMDB] Still no results, falling back to page 1`);
+                    url = `${this.baseUrl}/discover/movie?api_key=${this.apiKey}&language=es-ES&with_genres=${genreParam}&sort_by=popularity.desc&include_adult=false&include_video=false&page=${1}`;
+                    response = await fetch(url);
+                    data = await response.json() as TMDBResponse;
+                }
+            } else {
+                console.log(`[TMDB] Success on page ${page}. Found ${data.results.length} movies.`);
+            }
 
-            const data = await response.json() as TMDBResponse;
+            if (!data.results) return [];
+
             const movies: Movie[] = [];
 
             for (const tmdbMovie of data.results) {
@@ -264,13 +301,25 @@ export class TMDBService {
     }
 
     /**
-     * Map genre IDs to names
+     * Map genre IDs to names, prioritizing specific genres
      */
-    private mapGenres(genreIds: number[]): string[] {
-        return genreIds
-            .slice(0, 3)
-            .map(id => GENRE_MAP[id])
-            .filter(Boolean);
+    private mapGenres(genreIds: number[], priorityGenreIds: number[] = []): string[] {
+        const mapped = genreIds
+            .map(id => ({ id, name: GENRE_MAP[id] }))
+            .filter(g => g.name);
+
+        // Sort: Priority genres first
+        if (priorityGenreIds.length > 0) {
+            mapped.sort((a, b) => {
+                const aPriority = priorityGenreIds.includes(a.id);
+                const bPriority = priorityGenreIds.includes(b.id);
+                if (aPriority && !bPriority) return -1;
+                if (!aPriority && bPriority) return 1;
+                return 0;
+            });
+        }
+
+        return mapped.map(g => g.name);
     }
 
     /**

@@ -29,14 +29,16 @@ const Button: React.FC<ButtonProps> = ({
     primary: `
       bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600 
       text-white shadow-lg shadow-indigo-500/30 
-      hover:shadow-indigo-500/50 hover:from-indigo-600 hover:via-purple-600 hover:to-indigo-700
+      hover:shadow-indigo-500/50 hover:scale-[1.03]
       focus:ring-indigo-500
+      relative overflow-hidden group
     `,
     secondary: `
       bg-gradient-to-r from-teal-500 to-cyan-500 
       text-white shadow-lg shadow-teal-500/30 
-      hover:shadow-teal-500/50
+      hover:shadow-teal-500/50 hover:scale-[1.03]
       focus:ring-teal-500
+      relative overflow-hidden group
     `,
     accent: `
       bg-gradient-to-r from-emerald-500 to-green-500 
@@ -77,6 +79,11 @@ const Button: React.FC<ButtonProps> = ({
       disabled={isLoading || props.disabled}
       {...props}
     >
+      {/* Shimmer Effect */}
+      {(variant === 'primary' || variant === 'secondary' || variant === 'accent' || variant === 'danger') && (
+        <div className="absolute inset-0 -translate-x-full group-hover:animate-shimmer bg-gradient-to-r from-transparent via-white/20 to-transparent z-10" />
+      )}
+      
       {isLoading && (
         <svg
           className="animate-spin -ml-1 mr-3 h-5 w-5 text-current"

@@ -154,14 +154,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       setVotes({});
       setMatchResult(null);
 
-      // Connect to socket
-      socketService.connect({
+      // Socket callbacks configuration
+      const socketCallbacks = {
         onConnect: () => {
           setIsConnected(true);
           socketService.emitUserJoined(roomCode, userId);
         },
         onDisconnect: () => setIsConnected(false),
-        onUserListUpdated: (users) => {
+        onUserListUpdated: (users: any[]) => {
           const mappedUsers: User[] = users.map(u => ({
             id: u.id,
             name: u.name,
@@ -174,7 +174,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         onVotingStarted: () => {
           setCurrentRoom(prev => prev ? { ...prev, status: 'voting' } : null);
         },
-        onUserProgress: (data) => {
+        onUserProgress: (data: any) => {
           setCurrentRoom(prev => {
             if (!prev) return null;
             const updatedUsers = prev.users.map(u =>
@@ -192,7 +192,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             } : null);
           }
         },
-        onMatchingComplete: (result) => {
+        onMatchingComplete: (result: any) => {
           setMatchResult(result);
           setCurrentRoom(prev => prev ? {
             ...prev,
@@ -200,8 +200,19 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             matchingMovieId: result.match?.id
           } : null);
         },
-        onError: (err) => setError(err.error)
-      });
+        onError: (err: any) => {
+          setError(err.error);
+        }
+      };
+
+      // Connect to socket
+      if (socketService.isConnected()) {
+        socketService.updateCallbacks(socketCallbacks);
+        socketService.emitUserJoined(roomCode, userId);
+        setIsConnected(true);
+      } else {
+        socketService.connect(socketCallbacks);
+      }
       return true;
     } catch (err) {
       console.error('Failed to create room:', err);
@@ -253,14 +264,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       setVotes({});
       setMatchResult(null);
 
-      // Connect to socket
-      socketService.connect({
+      // Socket callbacks configuration
+      const socketCallbacks = {
         onConnect: () => {
           setIsConnected(true);
           socketService.emitUserJoined(roomCode, userId);
         },
         onDisconnect: () => setIsConnected(false),
-        onUserListUpdated: (users) => {
+        onUserListUpdated: (users: any[]) => {
           const mappedUsers: User[] = users.map(u => ({
             id: u.id,
             name: u.name,
@@ -273,7 +284,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         onVotingStarted: () => {
           setCurrentRoom(prev => prev ? { ...prev, status: 'voting' } : null);
         },
-        onUserProgress: (data) => {
+        onUserProgress: (data: any) => {
           setCurrentRoom(prev => {
             if (!prev) return null;
             const updatedUsers = prev.users.map(u =>
@@ -291,7 +302,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             } : null);
           }
         },
-        onMatchingComplete: (result) => {
+        onMatchingComplete: (result: any) => {
           setMatchResult(result);
           setCurrentRoom(prev => prev ? {
             ...prev,
@@ -299,8 +310,19 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             matchingMovieId: result.match?.id
           } : null);
         },
-        onError: (err) => setError(err.error)
-      });
+        onError: (err: any) => {
+          setError(err.error);
+        }
+      };
+
+      // Connect to socket
+      if (socketService.isConnected()) {
+        socketService.updateCallbacks(socketCallbacks);
+        socketService.emitUserJoined(roomCode, userId);
+        setIsConnected(true);
+      } else {
+        socketService.connect(socketCallbacks);
+      }
 
       return true;
     } catch (err) {

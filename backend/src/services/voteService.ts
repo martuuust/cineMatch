@@ -146,14 +146,13 @@ export class VoteService {
     /**
      * Get movies by genres
      */
-    async getMoviesByGenres(genreIds: number[]): Promise<Movie[]> {
+    async getMoviesByGenres(genreIds: number[], count: number = 10): Promise<Movie[]> {
         if (tmdbService.isConfigured()) {
-            const movies = await tmdbService.getMoviesByGenres(genreIds, this.MAX_MOVIES);
+            const movies = await tmdbService.getMoviesByGenres(genreIds, count);
             if (movies.length > 0) {
-                // Update cache if needed or handle appropriately
+                // Return directly the fresh movies for this room, do not merge with global cache for the room's specific list
+                // However, we can update the global cache to "know" about these movies for later lookups by ID
                 if (!movieCache) movieCache = [];
-
-                // Add new movies to cache if they don't exist
                 const newMovies = movies.filter(m => !movieCache!.find(c => c.id === m.id));
                 movieCache = [...movieCache, ...newMovies];
 
@@ -169,12 +168,12 @@ export class VoteService {
         if (genreNames.length > 0) {
             const allMovies = [...MOCK_MOVIES]; // Use full source for filtering
 
-            // AND logic: Movie must have ALL selected genres
+            // OR logic: Movie must have ANY of the selected genres
             const filteredMovies = allMovies.filter(m =>
-                m.genres && genreNames.every(requiredGenre =>
+                m.genres && genreNames.some(requiredGenre =>
                     m.genres!.some(g => g.toLowerCase() === requiredGenre.toLowerCase())
                 )
-            ).slice(0, this.MAX_MOVIES);
+            ).slice(0, count);
 
             if (filteredMovies.length > 0) {
                 console.log(`[VoteService] Found ${filteredMovies.length} mock movies for genres ${genreNames.join(', ')}`);
@@ -183,7 +182,7 @@ export class VoteService {
         }
 
         const defaultMovies = await this.getAllMoviesAsync();
-        return defaultMovies.slice(0, this.MAX_MOVIES);
+        return defaultMovies.slice(0, count);
     }
 
     /**

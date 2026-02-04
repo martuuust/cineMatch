@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PartyPopper, RefreshCw, Home, Heart, Star, AlertCircle, PlayCircle, Info, Sparkles, Trophy } from 'lucide-react';
@@ -114,234 +113,177 @@ const ResultsPage: React.FC = () => {
   }
 
   return (
-    <div className="h-[100dvh] w-full flex flex-col relative overflow-hidden bg-slate-950">
-      {/* Background Orbs (Static) */}
+    <div className="h-[100dvh] flex flex-col relative overflow-hidden bg-black">
+      {/* Animated Background */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="floating-orb orb-1" />
         <div className="floating-orb orb-2" />
         <div className="floating-orb orb-3" style={{ background: isPerfectMatch ? 'rgba(34, 197, 94, 0.2)' : undefined }} />
       </div>
 
-      {/* Confetti Effect */}
       {showConfetti && <Confetti />}
 
-      {/* Header */}
-      <motion.div
-        initial={{ y: -30, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        className="pt-8 pb-4 px-6 text-center z-10 shrink-0"
-      >
-        <motion.div
-          className="flex items-center justify-center gap-3 mb-2"
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ type: "spring", stiffness: 200, delay: 0.2 }}
-        >
-          {isPerfectMatch ? (
-            <div className="w-14 h-14 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center shadow-lg shadow-green-500/30 animate-pulse-glow">
-              <Trophy className="w-7 h-7 text-white" />
-            </div>
-          ) : (
-            <div className="w-14 h-14 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/30">
-              <PartyPopper className="w-7 h-7 text-white" />
-            </div>
-          )}
-        </motion.div>
-
-        <motion.h1
-          className="text-3xl font-bold text-white mb-1"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-        >
-          {isShowingPrimary
-            ? (isPerfectMatch ? "¡Es un Match!" : "Mejor Opción")
-            : "Otra Coincidencia"
-          }
-        </motion.h1>
-
-        {isShowingPrimary && otherMatches.length > 0 && (
-          <motion.div
-            className="flex items-center justify-center gap-2 text-xs text-slate-400 bg-white/5 py-2 px-4 rounded-full inline-flex backdrop-blur-sm border border-white/10"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-          >
-            <Sparkles className="w-3 h-3 text-indigo-400" />
-            <span>Elegida por mejor valoración entre {results.length} coincidencias</span>
-          </motion.div>
-        )}
-      </motion.div>
-
-      {/* Main Content - Movie Card */}
-      <div className="flex-1 px-4 pb-4 flex flex-col justify-center items-center min-h-0 z-10">
-        <motion.div
-          key={displayMovie.id}
-          initial={{ scale: 0.95, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.1 }}
-          className="w-full max-w-md h-full max-h-[500px]"
-        >
-          <Card noPadding className="bg-slate-900 shadow-2xl rounded-3xl overflow-hidden flex flex-col h-full border border-white/10">
-
-            {/* Movie Poster */}
-            <div className="relative h-48 shrink-0 bg-slate-800 overflow-hidden">
-              <img
-                src={displayMovie.posterPath}
-                alt={displayMovie.title}
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent" />
-
-              {/* Match Badge */}
-              <motion.div
-                className="absolute top-4 right-4"
-                initial={{ scale: 0, rotate: -180 }}
-                animate={{ scale: 1, rotate: 0 }}
-                transition={{ delay: 0.5, type: "spring" }}
-              >
-                <div className={`${isShowingPrimary
-                  ? (isPerfectMatch ? 'bg-gradient-to-r from-green-400 to-emerald-500' : 'bg-gradient-to-r from-indigo-500 to-purple-600')
-                  : 'bg-slate-600'
-                  } text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg flex items-center gap-2`}
-                >
-                  <Heart className="w-4 h-4 fill-white" />
-                  {isShowingPrimary
-                    ? (isPerfectMatch ? '100% Match' : 'Top Pick')
-                    : 'Coincidencia'
-                  }
-                </div>
-              </motion.div>
-            </div>
-
-            {/* Movie Info - SCROLLABLE CONTENT */}
-            <div className="p-5 flex flex-col gap-4 overflow-y-auto relative -mt-8 bg-slate-900 rounded-t-3xl flex-1 custom-scrollbar">
-              <div>
-                <div className="flex justify-between items-start mb-2">
-                  <h2 className="text-xl font-bold text-white leading-tight pr-4">{displayMovie.title}</h2>
-                  <div className="flex items-center gap-1.5 bg-yellow-500/20 px-3 py-1.5 rounded-full border border-yellow-500/30 shrink-0">
-                    <Star className="w-4 h-4 fill-yellow-400 text-yellow-400 star-glow" />
-                    <span className="font-bold text-yellow-400">{displayMovie.rating}</span>
-                  </div>
-                </div>
-                <div className="flex flex-wrap gap-2 text-sm text-slate-400 font-medium">
-                  <span>{displayMovie.releaseYear}</span>
-                  <span>•</span>
-                  <span>{typeof displayMovie.duration === 'number' ? `${Math.floor(displayMovie.duration / 60)}h ${displayMovie.duration % 60}m` : displayMovie.duration}</span>
-                  <span>•</span>
-                  <span className="truncate max-w-[150px]">{displayMovie.genres?.join(', ')}</span>
-                </div>
-              </div>
-
-              {/* Watch Providers - ALWAYS VISIBLE */}
-              {displayMovie.watchProviders && displayMovie.watchProviders.length > 0 ? (
-                <div className="bg-white/5 p-4 rounded-xl border border-white/10 shrink-0">
-                  <div className="flex items-center gap-2 mb-3 text-slate-300">
-                    <PlayCircle className="w-4 h-4 text-indigo-400" />
-                    <span className="text-xs font-bold uppercase tracking-wider">Disponible en</span>
-                  </div>
-                  <div className="flex flex-wrap gap-3">
-                    {displayMovie.watchProviders.map((provider) => (
-                      <motion.div
-                        key={provider.providerId}
-                        className="group relative"
-                        whileHover={{ scale: 1.1 }}
-                      >
-                        <img
-                          src={provider.logoPath}
-                          alt={provider.providerName}
-                          className="w-10 h-10 rounded-lg shadow-sm border border-white/10 provider-logo"
-                          title={provider.providerName}
-                        />
-                      </motion.div>
-                    ))}
-                  </div>
+      {/* Main Layout - Split for Desktop, Stacked for Mobile - No Page Scroll */}
+      <div className="flex-1 flex flex-col md:flex-row relative z-10 w-full h-full p-4 gap-4 max-w-6xl mx-auto">
+        
+        {/* Left/Top: Visuals & Header */}
+        <div className="flex-1 flex flex-col min-h-0">
+          {/* Header Badge */}
+          <div className="text-center mb-4 flex-shrink-0">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.5 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ type: "spring", duration: 0.8 }}
+              className="inline-block"
+            >
+              {isPerfectMatch ? (
+                <div className="bg-gradient-to-r from-green-400 to-emerald-600 text-white px-6 py-2 rounded-full font-black text-lg shadow-lg shadow-green-500/30 flex items-center gap-2 animate-pulse-glow">
+                  <PartyPopper className="w-5 h-5" />
+                  ¡IT'S A MATCH!
                 </div>
               ) : (
-                <div className="bg-white/5 p-4 rounded-xl border border-white/10 text-center text-slate-500 text-sm shrink-0">
-                  No hay información de streaming disponible
+                <div className="bg-gradient-to-r from-amber-400 to-orange-600 text-white px-6 py-2 rounded-full font-black text-lg shadow-lg shadow-orange-500/30 flex items-center gap-2">
+                  <Star className="w-5 h-5 fill-current" />
+                  TOP PICKS
                 </div>
               )}
+            </motion.div>
+          </div>
 
-              <p className="text-sm text-slate-400 leading-relaxed">
-                {displayMovie.overview}
-              </p>
+          {/* Poster Card */}
+          <div className="flex-1 relative min-h-0 flex justify-center items-center">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={displayMovie.id}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                transition={{ type: "spring", duration: 0.6 }}
+                className="relative h-full max-h-[50vh] md:max-h-full aspect-[2/3] rounded-2xl overflow-hidden shadow-2xl border border-white/10 group"
+              >
+                <img
+                  src={displayMovie.posterPath}
+                  alt={displayMovie.title}
+                  className="w-full h-full object-cover"
+                />
+                
+                {/* Winner Badge */}
+                {isShowingPrimary && isPerfectMatch && (
+                  <div className="absolute top-4 left-4 z-10">
+                    <span className="bg-green-500 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg shadow-green-500/30 flex items-center gap-1">
+                      <Trophy className="w-3 h-3 fill-current" /> WINNER
+                    </span>
+                  </div>
+                )}
 
-              {/* Voted by */}
-              <div className="pt-3 border-t border-white/10 shrink-0">
-                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Votado sí por:</p>
-                <div className="flex -space-x-2">
-                  {room?.users.map((u, index) => (
-                    <motion.div
-                      key={u.id}
-                      className="border-2 border-slate-900 rounded-full"
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ delay: 0.6 + index * 0.1 }}
-                    >
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-xs font-bold text-white">
-                        {u.name.charAt(0).toUpperCase()}
-                      </div>
-                    </motion.div>
+                {/* Rating Badge */}
+                <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-md text-white px-3 py-1.5 rounded-full flex items-center gap-1.5 font-bold border border-white/10 shadow-lg z-10">
+                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                  <span>{displayMovie.rating}</span>
+                </div>
+              </motion.div>
+            </AnimatePresence>
+          </div>
+
+          {/* Other Matches Carousel (Compact) */}
+          {otherMatches.length > 0 && (
+            <div className="mt-4 flex-shrink-0 h-24">
+              <div className="flex gap-3 overflow-x-auto pb-2 h-full items-center justify-center snap-x hide-scrollbar px-2">
+                 <button
+                    onClick={() => setSelectedMovieId(null)}
+                    className={`
+                      relative flex-shrink-0 h-20 aspect-[2/3] rounded-lg overflow-hidden snap-center transition-all duration-200
+                      ${isShowingPrimary ? 'ring-2 ring-green-500 scale-105 z-10' : 'opacity-60 hover:opacity-100 grayscale hover:grayscale-0'}
+                    `}
+                  >
+                    <img src={primaryMatch?.posterPath} className="w-full h-full object-cover" alt="Winner" />
+                  </button>
+
+                {otherMatches.map((movie) => (
+                  <button
+                    key={movie.id}
+                    onClick={() => setSelectedMovieId(movie.id)}
+                    className={`
+                      relative flex-shrink-0 h-20 aspect-[2/3] rounded-lg overflow-hidden snap-center transition-all duration-200
+                      ${selectedMovieId === movie.id ? 'ring-2 ring-indigo-500 scale-105 z-10' : 'opacity-60 hover:opacity-100 grayscale hover:grayscale-0'}
+                    `}
+                  >
+                    <img src={movie.posterPath} className="w-full h-full object-cover" alt={movie.title} />
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Right/Bottom: Details & Info */}
+        <div className="flex-1 flex flex-col min-h-0 bg-white/5 backdrop-blur-md rounded-3xl p-6 border border-white/10">
+          <div className="flex-1 overflow-y-auto custom-scrollbar pr-2">
+            <h1 className="text-3xl font-black text-white leading-tight mb-2">
+              {displayMovie.title}
+            </h1>
+            
+            <div className="flex flex-wrap items-center gap-2 mb-4">
+              <span className="px-2 py-1 bg-white/10 rounded-md text-xs font-bold text-white border border-white/5">
+                {displayMovie.releaseYear}
+              </span>
+              <span className="px-2 py-1 bg-indigo-500/30 text-indigo-200 rounded-md text-xs font-bold border border-indigo-500/20">
+                {displayMovie.genres.join(', ')}
+              </span>
+              <span className="px-2 py-1 bg-white/10 rounded-md text-xs font-bold text-white border border-white/5">
+                {Math.floor(displayMovie.duration / 60)}h {displayMovie.duration % 60}m
+              </span>
+            </div>
+
+            <p className="text-slate-300 text-sm leading-relaxed mb-6">
+              {displayMovie.overview}
+            </p>
+
+            {/* Providers - Always Visible */}
+            {displayMovie.watchProviders && displayMovie.watchProviders.length > 0 && (
+              <div className="mb-6">
+                <h3 className="text-xs font-bold text-slate-500 mb-3 uppercase tracking-wider">Disponible en</h3>
+                <div className="flex flex-wrap gap-3">
+                  {displayMovie.watchProviders.map((provider: any) => (
+                    <div key={provider.providerId} className="flex items-center gap-2 bg-black/20 px-3 py-2 rounded-lg border border-white/5">
+                      {provider.logoPath && (
+                        <img 
+                          src={provider.logoPath} 
+                          alt={provider.providerName}
+                          className="w-6 h-6 rounded-md" 
+                        />
+                      )}
+                      <span className="text-xs font-medium text-slate-300">{provider.providerName}</span>
+                    </div>
                   ))}
                 </div>
               </div>
-            </div>
-          </Card>
-        </motion.div>
-      </div>
-
-      {/* Other Matches Horizontal Carousel */}
-      {otherMatches.length > 0 && (
-        <motion.div
-          className="px-6 pb-2 shrink-0 z-20"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.7 }}
-        >
-          <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Otras coincidencias</p>
-          <div className="flex gap-3 overflow-x-auto pb-4 snap-x hide-scrollbar">
-            <button
-              onClick={() => setSelectedMovieId(null)}
-              className={`shrink-0 w-14 snap-start transition-all rounded-lg overflow-hidden ${isShowingPrimary ? 'ring-2 ring-indigo-500 opacity-100' : 'opacity-50'}`}
-            >
-              <img src={primaryMatch?.posterPath} className="w-14 h-20 object-cover bg-slate-700" alt="Primary" />
-            </button>
-            {otherMatches.map(movie => (
-              <button
-                key={movie.id}
-                onClick={() => setSelectedMovieId(movie.id)}
-                className={`shrink-0 w-14 snap-start transition-all rounded-lg overflow-hidden ${selectedMovieId === movie.id ? 'ring-2 ring-indigo-500 opacity-100' : 'opacity-50'}`}
-              >
-                <img src={movie.posterPath} className="w-14 h-20 object-cover bg-slate-700" alt={movie.title} />
-              </button>
-            ))}
+            )}
           </div>
-        </motion.div>
-      )}
 
-      {/* Footer Actions */}
-      <motion.div
-        className="p-6 pt-3 shrink-0 z-10 grid grid-cols-2 gap-4 w-full max-w-md mx-auto"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.8 }}
-      >
-        <Button
-          variant="outline"
-          fullWidth
-          onClick={() => navigate('/swipe')}
-          className="border-white/20 text-white hover:bg-white/10"
-        >
-          <RefreshCw className="mr-2 w-4 h-4" /> Otra vez
-        </Button>
-        <Button
-          fullWidth
-          onClick={() => { leaveRoom(); navigate('/'); }}
-          className="bg-gradient-to-r from-indigo-500 to-purple-600"
-        >
-          <Home className="mr-2 w-4 h-4" /> Inicio
-        </Button>
-      </motion.div>
+          {/* Action Buttons - Fixed at bottom of panel */}
+          <div className="pt-4 mt-auto border-t border-white/10 grid grid-cols-2 gap-3">
+            <Button 
+              className="bg-white text-slate-900 hover:bg-slate-200"
+              icon={<PlayCircle className="w-4 h-4" />}
+            >
+              Ver Ahora
+            </Button>
+            <Button 
+              variant="outline"
+              className="border-white/20 text-white hover:bg-white/10"
+              onClick={() => {
+                leaveRoom();
+                navigate('/');
+              }}
+            >
+              <Home className="w-4 h-4 mr-2" />
+              Salir
+            </Button>
+          </div>
+        </div>
+
+      </div>
     </div>
   );
 };

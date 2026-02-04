@@ -68,36 +68,36 @@ const DraggableCard = forwardRef<DraggableCardRef, DraggableCardProps>(({ movie,
       initial={{ scale: 0.95, opacity: 0 }}
       animate={controls}
     >
-        {/* LIKE Indicator */}
-        <motion.div
-            className="absolute top-8 left-8 border-4 border-green-500 text-green-500 rounded-xl px-4 py-2 text-2xl font-bold uppercase tracking-widest rotate-[-20deg] z-50 bg-green-500/10 backdrop-blur-sm"
-            style={{ opacity: likeOpacity }}
-        >
-            LIKE
-        </motion.div>
+            {/* LIKE Indicator */}
+            <motion.div
+                className="absolute top-10 left-8 border-4 border-green-500 text-green-500 rounded-2xl px-6 py-3 text-4xl font-black uppercase tracking-widest rotate-[-15deg] z-50 bg-black/20 backdrop-blur-md shadow-xl shadow-green-500/20"
+                style={{ opacity: likeOpacity }}
+            >
+                LIKE
+            </motion.div>
 
-        {/* NOPE Indicator */}
-        <motion.div
-            className="absolute top-8 right-8 border-4 border-red-500 text-red-500 rounded-xl px-4 py-2 text-2xl font-bold uppercase tracking-widest rotate-[20deg] z-50 bg-red-500/10 backdrop-blur-sm"
-            style={{ opacity: nopeOpacity }}
-        >
-            NOPE
-        </motion.div>
+            {/* NOPE Indicator */}
+            <motion.div
+                className="absolute top-10 right-8 border-4 border-red-500 text-red-500 rounded-2xl px-6 py-3 text-4xl font-black uppercase tracking-widest rotate-[15deg] z-50 bg-black/20 backdrop-blur-md shadow-xl shadow-red-500/20"
+                style={{ opacity: nopeOpacity }}
+            >
+                NOPE
+            </motion.div>
 
-        {/* Main Card */}
-        <Card
-            noPadding
-            className="w-full h-full bg-slate-900 shadow-2xl rounded-3xl overflow-hidden flex flex-col relative border border-white/10"
-        >
-            {/* Movie Image */}
-            <div className="relative flex-1 bg-slate-900 overflow-hidden">
-            <img
-                src={movie.posterPath}
-                alt={movie.title}
-                className="w-full h-full object-cover"
-                draggable={false}
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
+            {/* Main Card */}
+            <Card
+                noPadding
+                className="w-full h-full bg-slate-900 shadow-2xl rounded-[2rem] overflow-hidden flex flex-col relative border border-white/10 ring-1 ring-white/5"
+            >
+                {/* Movie Image */}
+                <div className="relative flex-1 bg-slate-900 overflow-hidden group">
+                <img
+                    src={movie.posterPath}
+                    alt={movie.title}
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    draggable={false}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent opacity-90" />
 
             {/* Rating Badge */}
             <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-md text-white px-3 py-1.5 rounded-full flex items-center gap-1.5 font-bold border border-white/10">
@@ -114,16 +114,20 @@ const DraggableCard = forwardRef<DraggableCardRef, DraggableCardProps>(({ movie,
             </button>
 
             {/* Movie Title Overlay */}
-            <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-                <h2 className="text-2xl font-bold leading-tight mb-2 drop-shadow-lg">
+            <div className="absolute bottom-0 left-0 right-0 p-8 text-white z-10">
+                <h2 className="text-4xl font-black leading-tight mb-4 drop-shadow-2xl tracking-tight">
                 {movie.title}
                 </h2>
-                <div className="flex items-center gap-2 text-sm text-white/80 font-medium">
-                <span>{movie.releaseYear}</span>
-                <span>•</span>
-                <span>{movie.genres[0]}</span>
-                <span>•</span>
-                <span>{Math.floor(movie.duration / 60)}h {movie.duration % 60}m</span>
+                <div className="flex flex-wrap items-center gap-3 text-sm font-bold">
+                    <span className="px-3 py-1 bg-white/20 backdrop-blur-md rounded-lg border border-white/10 shadow-lg">
+                        {movie.releaseYear}
+                    </span>
+                    <span className="px-3 py-1 bg-indigo-500/80 backdrop-blur-md rounded-lg border border-indigo-400/30 shadow-lg shadow-indigo-500/20">
+                        {movie.genres.slice(0, 2).join(' / ')}
+                    </span>
+                    <span className="px-3 py-1 bg-white/10 backdrop-blur-md rounded-lg border border-white/10">
+                        {Math.floor(movie.duration / 60)}h {movie.duration % 60}m
+                    </span>
                 </div>
             </div>
             </div>
@@ -240,7 +244,7 @@ const SwipePage: React.FC = () => {
   // Finished voting state
   if (currentIndex >= movies.length || (userProgress && userProgress.hasFinished)) {
     return (
-      <div className="min-h-[100dvh] flex flex-col items-center justify-center p-6 text-center relative">
+      <div className="h-[100dvh] flex flex-col items-center justify-center p-6 text-center relative overflow-hidden">
         <div className="animated-bg">
           <div className="floating-orb orb-1" />
           <div className="floating-orb orb-2" />
@@ -365,20 +369,18 @@ const SwipePage: React.FC = () => {
       <div className="px-6 pb-8 pt-4 flex justify-center items-center gap-8 z-10">
         <motion.button
           onClick={() => handleButtonVote('no')}
-          className="w-18 h-18 rounded-full bg-white/5 backdrop-blur-md border-2 border-red-500/50 flex items-center justify-center text-red-500 shadow-lg shadow-red-500/10"
+          className="w-[72px] h-[72px] rounded-full bg-white/5 backdrop-blur-md border-2 border-red-500/50 flex items-center justify-center text-red-500 shadow-lg shadow-red-500/10"
           whileHover={{ scale: 1.1, borderColor: 'rgba(239, 68, 68, 1)' }}
           whileTap={{ scale: 0.9 }}
-          style={{ width: 72, height: 72 }}
         >
           <X className="w-8 h-8" strokeWidth={3} />
         </motion.button>
 
         <motion.button
           onClick={() => handleButtonVote('yes')}
-          className="w-18 h-18 rounded-full bg-white/5 backdrop-blur-md border-2 border-green-500/50 flex items-center justify-center text-green-500 shadow-lg shadow-green-500/10"
+          className="w-[72px] h-[72px] rounded-full bg-white/5 backdrop-blur-md border-2 border-green-500/50 flex items-center justify-center text-green-500 shadow-lg shadow-green-500/10"
           whileHover={{ scale: 1.1, borderColor: 'rgba(34, 197, 94, 1)' }}
           whileTap={{ scale: 0.9 }}
-          style={{ width: 72, height: 72 }}
         >
           <Check className="w-8 h-8" strokeWidth={3} />
         </motion.button>
