@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, User, Plus, Sparkles, Film, Heart, Skull, Laugh, Rocket, Drama } from 'lucide-react';
+import { ArrowLeft, User, Plus, Sparkles, Film, Heart, Skull, Laugh, Rocket, Drama, AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useAppContext } from '../context/AppContext';
 import Button from '../components/ui/Button';
@@ -13,7 +13,7 @@ const CreateRoomPage: React.FC = () => {
   const { createRoom, error } = useAppContext();
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
-  const [genreId, setGenreId] = useState<number | null>(null);
+  const [genreIds, setGenreIds] = useState<number[]>([]);
 
   const GENRES = [
     { id: 28, name: 'Acción', icon: Rocket, color: 'from-orange-500 to-red-500' },
@@ -21,14 +21,14 @@ const CreateRoomPage: React.FC = () => {
     { id: 18, name: 'Drama', icon: Drama, color: 'from-blue-500 to-indigo-500' },
     { id: 27, name: 'Terror', icon: Skull, color: 'from-gray-600 to-gray-900' },
     { id: 10749, name: 'Romance', icon: Heart, color: 'from-pink-500 to-rose-500' },
-    { id: 878, name: 'Sci-Fi', icon: Sparkles, color: 'from-cyan-500 to-blue-500' },
+    { id: 878, name: 'Ciencia Ficción', icon: Sparkles, color: 'from-cyan-500 to-blue-500' },
   ];
 
   const handleCreate = async () => {
     if (!name.trim()) return;
     setLoading(true);
 
-    const success = await createRoom(name, genreId || undefined);
+    const success = await createRoom(name, genreIds.length > 0 ? genreIds : undefined);
     if (success) {
       navigate('/waiting');
     } else {
@@ -36,27 +36,27 @@ const CreateRoomPage: React.FC = () => {
     }
   };
 
+  const toggleGenre = (id: number) => {
+    setGenreIds(prev =>
+      prev.includes(id)
+        ? prev.filter(g => g !== id)
+        : [...prev, id]
+    );
+  };
+
   return (
     <div className="min-h-[100dvh] p-6 flex flex-col relative overflow-hidden">
-      {/* Animated Background */}
-      <div className="animated-bg">
-        <div className="floating-orb orb-1" />
-        <div className="floating-orb orb-2" />
-      </div>
+      {/* Animated Background removed */}
 
       {/* Back Button */}
-      <motion.div
-        className="mb-6 z-10"
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-      >
+      <div className="mb-6 z-10">
         <button
           onClick={() => navigate('/')}
           className="p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all text-slate-400 hover:text-white"
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
-      </motion.div>
+      </div>
 
       <div className="flex-1 flex flex-col justify-center max-w-sm mx-auto w-full z-10">
         {/* Header */}
@@ -98,35 +98,38 @@ const CreateRoomPage: React.FC = () => {
               {/* Genre Selection */}
               <div>
                 <label className="block text-sm font-semibold text-slate-300 mb-3">
-                  Género <span className="text-slate-500 font-normal">(Opcional)</span>
+                  Géneros <span className="text-slate-500 font-normal">(Opcional, múltiple)</span>
                 </label>
                 <div className="grid grid-cols-3 gap-2">
-                  {GENRES.map((g, index) => (
-                    <motion.button
-                      key={g.id}
-                      onClick={() => setGenreId(genreId === g.id ? null : g.id)}
-                      className={`relative p-3 rounded-xl border transition-all flex flex-col items-center gap-2 ${genreId === g.id
+                  {GENRES.map((g, index) => {
+                    const isSelected = genreIds.includes(g.id);
+                    return (
+                      <motion.button
+                        key={g.id}
+                        onClick={() => toggleGenre(g.id)}
+                        className={`relative p-3 rounded-xl border transition-all flex flex-col items-center gap-2 ${isSelected
                           ? `bg-gradient-to-br ${g.color} border-transparent shadow-lg`
                           : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20'
-                        }`}
-                      whileHover={{ scale: 1.03 }}
-                      whileTap={{ scale: 0.97 }}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.05 * index }}
-                    >
-                      <g.icon className={`w-5 h-5 ${genreId === g.id ? 'text-white' : 'text-slate-400'}`} />
-                      <span className={`text-xs font-medium ${genreId === g.id ? 'text-white' : 'text-slate-400'}`}>
-                        {g.name}
-                      </span>
-                      {genreId === g.id && (
-                        <motion.div
-                          className="absolute inset-0 rounded-xl ring-2 ring-white/30"
-                          layoutId="genreRing"
-                        />
-                      )}
-                    </motion.button>
-                  ))}
+                          }`}
+                        whileHover={{ scale: 1.03 }}
+                        whileTap={{ scale: 0.97 }}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.05 * index }}
+                      >
+                        <g.icon className={`w-5 h-5 ${isSelected ? 'text-white' : 'text-slate-400'}`} />
+                        <span className={`text-xs font-medium ${isSelected ? 'text-white' : 'text-slate-400'}`}>
+                          {g.name}
+                        </span>
+                        {isSelected && (
+                          <motion.div
+                            className="absolute inset-0 rounded-xl ring-2 ring-white/30"
+                            layoutId="genreRing"
+                          />
+                        )}
+                      </motion.button>
+                    );
+                  })}
                 </div>
               </div>
 

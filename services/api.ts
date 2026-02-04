@@ -64,11 +64,11 @@ export const api = {
     /**
      * Create a new room
      */
-    async createRoom(userName: string, genreId?: number): Promise<CreateRoomResponse> {
+    async createRoom(userName: string, genreIds?: number[]): Promise<CreateRoomResponse> {
         const response = await fetch(`${API_BASE_URL}/rooms/create`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userName, genreId })
+            body: JSON.stringify({ userName, genreIds })
         });
         return handleResponse<CreateRoomResponse>(response);
     },

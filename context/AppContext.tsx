@@ -13,7 +13,7 @@ interface AppContextType {
   currentRoom: Room | null;
   room: Room | null; // Alias for currentRoom
   movies: Movie[];
-  createRoom: (userName: string, genreId?: number) => Promise<boolean>;
+  createRoom: (userName: string, genreIds?: number[]) => Promise<boolean>;
   joinRoom: (roomCode: string, userName: string) => Promise<boolean>;
   leaveRoom: () => void;
   startVoting: () => void;
@@ -41,9 +41,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       try {
         const movieList = await api.getMovies();
         if (!Array.isArray(movieList)) {
-            console.error('Invalid movie list received:', movieList);
-            setMovies([]);
-            return;
+          console.error('Invalid movie list received:', movieList);
+          setMovies([]);
+          return;
         }
         // Keep duration as number (minutes)
         const formattedMovies: Movie[] = movieList.map(m => ({
@@ -110,12 +110,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   }, [currentRoom?.code, currentUser?.id]);
 
-  const createRoom = useCallback(async (userName: string, genreId?: number) => {
+  const createRoom = useCallback(async (userName: string, genreIds?: number[]) => {
     try {
       setError(null);
 
       // Create room via API
-      const { roomCode, userId } = await api.createRoom(userName, genreId);
+      const { roomCode, userId } = await api.createRoom(userName, genreIds);
 
       // Fetch authoritative room state
       const roomDetails = await api.getRoom(roomCode);
@@ -133,11 +133,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       const newRoom: Room = {
         code: roomCode,
         users: roomDetails.users.map((u: any) => ({
-            id: u.id,
-            name: u.name,
-            isHost: u.isHost,
-            progress: u.progress,
-            hasFinished: u.hasFinished
+          id: u.id,
+          name: u.name,
+          isHost: u.isHost,
+          progress: u.progress,
+          hasFinished: u.hasFinished
         })),
         status: roomDetails.status,
         movieIds: roomDetails.movieIds
@@ -145,7 +145,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
       setCurrentUser(user);
       setCurrentRoom(newRoom);
-      
+
       // Force update movies with the ones from the room
       if (roomDetails.movies && roomDetails.movies.length > 0) {
         setMovies(roomDetails.movies);
@@ -233,16 +233,16 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       setCurrentRoom({
         code: roomCode.toUpperCase(),
         users: roomDetails.users.map((u: any) => ({
-            id: u.id,
-            name: u.name,
-            isHost: u.isHost,
-            progress: u.progress,
-            hasFinished: u.hasFinished
+          id: u.id,
+          name: u.name,
+          isHost: u.isHost,
+          progress: u.progress,
+          hasFinished: u.hasFinished
         })),
         status: roomDetails.status,
         movieIds: roomDetails.movieIds
       });
-      
+
       // Force update movies with the ones from the room
       if (roomMovies && roomMovies.length > 0) {
         setMovies(roomMovies);

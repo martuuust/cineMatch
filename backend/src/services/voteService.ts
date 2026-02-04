@@ -18,28 +18,29 @@ let movieCache: Movie[] | null = null;
 
 // Map TMDB Genre IDs to Mock Data Genre Names (English)
 const MOCK_GENRE_MAP: Record<number, string> = {
-    28: 'Action',
-    12: 'Adventure',
-    16: 'Animation',
-    35: 'Comedy',
-    80: 'Crime',
-    99: 'Documentary',
+    28: 'Acción',
+    12: 'Aventura',
+    16: 'Animación',
+    35: 'Comedia',
+    80: 'Crimen',
+    99: 'Documental',
     18: 'Drama',
-    10751: 'Family',
-    14: 'Fantasy',
-    36: 'History',
-    27: 'Horror',
-    10402: 'Music',
-    9648: 'Mystery',
+    10751: 'Familia',
+    14: 'Fantasía',
+    36: 'Historia',
+    27: 'Terror',
+    10402: 'Música',
+    9648: 'Misterio',
     10749: 'Romance',
-    878: 'Sci-Fi',
-    53: 'Thriller',
-    10752: 'War',
+    878: 'Ciencia Ficción',
+    53: 'Suspense',
+    10752: 'Guerra',
     37: 'Western'
 };
 
 export class VoteService {
-    private totalMovies: number = 20;
+    private totalMovies: number = 10;
+    private readonly MAX_MOVIES = 10;
 
     /**
      * Initialize movies from TMDB or fallback to mock data
@@ -53,9 +54,9 @@ export class VoteService {
         if (tmdbService.isConfigured()) {
             try {
                 console.log('[VoteService] Fetching movies from TMDB...');
-                const tmdbMovies = await tmdbService.getPopularMovies(20);
+                const tmdbMovies = await tmdbService.getPopularMovies(this.MAX_MOVIES);
 
-                if (tmdbMovies.length >= 20) {
+                if (tmdbMovies.length >= this.MAX_MOVIES) {
                     movieCache = tmdbMovies;
                     this.totalMovies = tmdbMovies.length;
                     console.log(`[VoteService] Loaded ${tmdbMovies.length} movies from TMDB`);
@@ -68,8 +69,8 @@ export class VoteService {
 
         // Fallback to mock data
         console.log('[VoteService] Using mock movie data');
-        movieCache = [...MOCK_MOVIES];
-        this.totalMovies = MOCK_MOVIES.length;
+        movieCache = [...MOCK_MOVIES].slice(0, this.MAX_MOVIES);
+        this.totalMovies = movieCache.length;
         return movieCache;
     }
 
@@ -77,7 +78,7 @@ export class VoteService {
      * Get the current movie list
      */
     getMovies(): Movie[] {
-        return movieCache || [...MOCK_MOVIES];
+        return movieCache || [...MOCK_MOVIES].slice(0, this.MAX_MOVIES);
     }
 
     /**
@@ -143,44 +144,46 @@ export class VoteService {
     }
 
     /**
-     * Get movies by genre
+     * Get movies by genres
      */
-    async getMoviesByGenre(genreId: number): Promise<Movie[]> {
+    async getMoviesByGenres(genreIds: number[]): Promise<Movie[]> {
         if (tmdbService.isConfigured()) {
-            const movies = await tmdbService.getMoviesByGenre(genreId);
+            const movies = await tmdbService.getMoviesByGenres(genreIds, this.MAX_MOVIES);
             if (movies.length > 0) {
-                // We don't update the global cache here to avoid race conditions with other rooms
-                // Instead, we just return the movies. 
-                // Note: getMovieById will need to be able to find these movies.
-                // For now, let's update the cache IF it's not set, or maybe we need a better strategy.
-                // A better strategy is to let the room store the movies, but that requires data structure changes.
-                // For this prototype, we can assume the cache might be overwritten or we append to it.
-                // Let's append unique movies to cache.
-                
+                // Update cache if needed or handle appropriately
                 if (!movieCache) movieCache = [];
-                
+
+                // Add new movies to cache if they don't exist
                 const newMovies = movies.filter(m => !movieCache!.find(c => c.id === m.id));
                 movieCache = [...movieCache, ...newMovies];
-                
+
                 return movies;
             }
         }
 
-        // Fallback: Filter mock movies by genre
-        const genreName = MOCK_GENRE_MAP[genreId];
-        if (genreName) {
-            const allMovies = this.getMovies();
-            const filteredMovies = allMovies.filter(m => 
-                m.genres && m.genres.some(g => g.toLowerCase() === genreName.toLowerCase())
-            );
-            
+        // Fallback: Filter mock movies by genres (OR logic)
+        const genreNames = genreIds
+            .map(id => MOCK_GENRE_MAP[id])
+            .filter(Boolean);
+
+        if (genreNames.length > 0) {
+            const allMovies = [...MOCK_MOVIES]; // Use full source for filtering
+
+            // AND logic: Movie must have ALL selected genres
+            const filteredMovies = allMovies.filter(m =>
+                m.genres && genreNames.every(requiredGenre =>
+                    m.genres!.some(g => g.toLowerCase() === requiredGenre.toLowerCase())
+                )
+            ).slice(0, this.MAX_MOVIES);
+
             if (filteredMovies.length > 0) {
-                console.log(`[VoteService] Found ${filteredMovies.length} mock movies for genre ${genreName}`);
+                console.log(`[VoteService] Found ${filteredMovies.length} mock movies for genres ${genreNames.join(', ')}`);
                 return filteredMovies;
             }
         }
 
-        return this.getMovies(); // Final Fallback
+        const defaultMovies = await this.getAllMoviesAsync();
+        return defaultMovies.slice(0, this.MAX_MOVIES);
     }
 
     /**

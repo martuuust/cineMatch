@@ -70,15 +70,15 @@ export class TMDBService {
      * Check if TMDB is configured
      */
     isConfigured(): boolean {
-        return !!this.apiKey && this.apiKey.length > 0;
+        return !!this.apiKey && this.apiKey.length > 0 && this.apiKey !== 'your_tmdb_api_key_here';
     }
 
     /**
      * Fetch popular movies from TMDB
      */
-    async getPopularMovies(count: number = 20): Promise<Movie[]> {
+    async getPopularMovies(count: number = 10): Promise<Movie[]> {
         // Check cache first
-        if (movieCache && Date.now() - cacheTimestamp < CACHE_DURATION) {
+        if (movieCache && Date.now() - cacheTimestamp < CACHE_DURATION && movieCache.length >= count) {
             console.log('[TMDB] Returning cached movies');
             return movieCache.slice(0, count);
         }
@@ -109,7 +109,7 @@ export class TMDBService {
                     // Skip movies without poster
                     if (!tmdbMovie.poster_path) continue;
 
-                    // Get full movie details for runtime and providers
+                    // Get full movie details for runtime, providers, and fallback overview
                     const details = await this.getMovieDetails(tmdbMovie.id);
 
                     const movie: Movie = {
@@ -119,7 +119,7 @@ export class TMDBService {
                         rating: Math.round(tmdbMovie.vote_average * 10) / 10,
                         duration: details?.runtime || 120,
                         genres: this.mapGenres(tmdbMovie.genre_ids || []),
-                        overview: tmdbMovie.overview || 'Sin descripción disponible.',
+                        overview: tmdbMovie.overview || details?.fallbackOverview || 'Sin descripción disponible.',
                         releaseYear: tmdbMovie.release_date
                             ? parseInt(tmdbMovie.release_date.split('-')[0])
                             : new Date().getFullYear(),
@@ -143,14 +143,15 @@ export class TMDBService {
     }
 
     /**
-     * Get movie details (runtime and watch providers)
+     * Get movie details (runtime, watch providers, and fallback overview)
      */
     private async getMovieDetails(movieId: number): Promise<{
         runtime: number;
-        watchProviders: { providerId: number; providerName: string; logoPath: string }[]
+        watchProviders: { providerId: number; providerName: string; logoPath: string }[];
+        fallbackOverview?: string;
     } | null> {
         try {
-            const url = `${this.baseUrl}/movie/${movieId}?api_key=${this.apiKey}&language=es-ES&append_to_response=watch/providers`;
+            const url = `${this.baseUrl}/movie/${movieId}?api_key=${this.apiKey}&language=es-ES&append_to_response=watch/providers,translations`;
             const response = await fetch(url);
 
             if (!response.ok) return null;
@@ -158,13 +159,19 @@ export class TMDBService {
             const data = await response.json() as any;
             const providers = data['watch/providers']?.results?.ES?.flatrate || [];
 
+            // Find English overview as fallback
+            const translations = data.translations?.translations || [];
+            const englishInfo = translations.find((t: any) => t.iso_639_1 === 'en');
+            const fallbackOverview = englishInfo?.data?.overview || '';
+
             return {
                 runtime: data.runtime || 120,
                 watchProviders: providers.map((p: any) => ({
                     providerId: p.provider_id,
                     providerName: p.provider_name,
                     logoPath: `${TMDB_IMAGE_BASE}${p.logo_path}`
-                }))
+                })),
+                fallbackOverview
             };
         } catch {
             return null;
@@ -174,7 +181,7 @@ export class TMDBService {
     /**
      * Search movies by query
      */
-    async searchMovies(query: string, count: number = 20): Promise<Movie[]> {
+    async searchMovies(query: string, count: number = 10): Promise<Movie[]> {
         if (!this.isConfigured()) {
             console.log('[TMDB] API key not configured');
             return [];
@@ -212,13 +219,15 @@ export class TMDBService {
     }
 
     /**
-     * Get movies by genre
+     * Get movies by genres
      */
-    async getMoviesByGenre(genreId: number, count: number = 20): Promise<Movie[]> {
+    async getMoviesByGenres(genreIds: number[], count: number = 10): Promise<Movie[]> {
         if (!this.isConfigured()) return [];
 
         try {
-            const url = `${this.baseUrl}/discover/movie?api_key=${this.apiKey}&language=es-ES&with_genres=${genreId}&sort_by=popularity.desc`;
+            // Join with comma (,) for AND logic (must have all genres)
+            const genreParam = genreIds.join(',');
+            const url = `${this.baseUrl}/discover/movie?api_key=${this.apiKey}&language=es-ES&with_genres=${genreParam}&sort_by=popularity.desc`;
             const response = await fetch(url);
 
             if (!response.ok) return [];
@@ -239,7 +248,7 @@ export class TMDBService {
                     rating: Math.round(tmdbMovie.vote_average * 10) / 10,
                     duration: details?.runtime || 120,
                     genres: this.mapGenres(tmdbMovie.genre_ids || []),
-                    overview: tmdbMovie.overview || 'Sin descripción disponible.',
+                    overview: tmdbMovie.overview || details?.fallbackOverview || 'Sin descripción disponible.',
                     releaseYear: tmdbMovie.release_date
                         ? parseInt(tmdbMovie.release_date.split('-')[0])
                         : new Date().getFullYear(),

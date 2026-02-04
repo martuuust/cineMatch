@@ -26,10 +26,10 @@ export class RoomController {
                 );
             }
 
-            const { userName, genreId } = req.body;
+            const { userName, genreIds } = req.body;
 
             // Create room
-            const { room, user } = await roomService.createRoom(userName, genreId);
+            const { room, user } = await roomService.createRoom(userName, genreIds);
 
             // Get movies for the room
             const movies = room.movieIds
@@ -69,7 +69,7 @@ export class RoomController {
             // Join room
             const { room, user } = roomService.joinRoom(roomCode, userName);
             const users = roomService.getRoomUsers(room.id);
-            
+
             // Get movies for the room
             const movies = room.movieIds
                 .map(id => roomService.getMovieById(id))
@@ -144,9 +144,13 @@ export const createRoomValidation = [
         .trim()
         .notEmpty().withMessage('User name is required')
         .isLength({ max: 30 }).withMessage('User name must be 30 characters or less'),
-    body('genreId')
+    body('genreIds')
         .optional()
-        .isInt().withMessage('Genre ID must be an integer')
+        .isArray().withMessage('Genre IDs must be an array')
+        .custom((value) => {
+            if (!Array.isArray(value)) return false;
+            return value.every(id => Number.isInteger(id));
+        }).withMessage('All genre IDs must be integers')
 ];
 
 export const joinRoomValidation = [

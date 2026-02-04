@@ -66,25 +66,34 @@ const ResultsPage: React.FC = () => {
     return null;
   }
 
-  // Get matched movie from result or fallback
-  const getPrimaryMatch = () => {
-    if (matchResult?.type === 'perfect_match' && matchResult.match) {
-      return matchResult.match;
+  // Unified Results Logic
+  const getResults = () => {
+    if (matchResult?.type === 'perfect_match') {
+      const match = matchResult.match;
+      const others = matchResult.otherMatches || [];
+      return match ? [match, ...others] : [];
     }
-    if (matchResult?.type === 'top_picks' && matchResult.topPicks?.[0]) {
-      return matchResult.topPicks[0].movie;
+    if (matchResult?.type === 'top_picks') {
+      return matchResult.topPicks.map(tp => tp.movie);
     }
-    return movies.find(m => m.id === room?.matchingMovieId) || movies[0];
+    // Fallback for legacy/error states
+    const match = movies.find(m => m.id === room?.matchingMovieId);
+    return match ? [match] : [];
   };
 
-  const primaryMatch = getPrimaryMatch();
+  const results = getResults();
+  const primaryMatch = results[0];
+  const otherMatches = results.slice(1);
   const isPerfectMatch = matchResult?.type === 'perfect_match';
-  const otherMatches = matchResult?.otherMatches || [];
 
+  // Determine which movie to display
   const displayMovie = selectedMovieId
     ? (otherMatches.find(m => m.id === selectedMovieId) || primaryMatch)
     : primaryMatch;
 
+  const isShowingPrimary = displayMovie.id === primaryMatch?.id;
+
+  // Reset selection when results change
   useEffect(() => {
     setSelectedMovieId(null);
   }, [matchResult]);
@@ -92,10 +101,6 @@ const ResultsPage: React.FC = () => {
   if (!displayMovie) {
     return (
       <div className="min-h-[100dvh] flex items-center justify-center p-6 relative">
-        <div className="animated-bg">
-          <div className="floating-orb orb-1" />
-          <div className="floating-orb orb-2" />
-        </div>
         <div className="text-center z-10">
           <AlertCircle className="w-16 h-16 text-slate-500 mx-auto mb-4" />
           <h2 className="text-xl font-bold mb-2 text-white">No hay resultados aún</h2>
@@ -108,13 +113,10 @@ const ResultsPage: React.FC = () => {
     );
   }
 
-  const isShowingPrimary = displayMovie.id === primaryMatch?.id;
-
   return (
-    <div className="h-[100dvh] w-full flex flex-col relative overflow-hidden">
-      {/* Animated Background */}
-      <div className="animated-bg">
-        <div className="floating-orb orb-1" />
+    <div className="h-[100dvh] w-full flex flex-col relative overflow-hidden bg-slate-950">
+      {/* Background Orbs (Static) */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className="floating-orb orb-2" />
         <div className="floating-orb orb-3" style={{ background: isPerfectMatch ? 'rgba(34, 197, 94, 0.2)' : undefined }} />
       </div>
@@ -165,7 +167,7 @@ const ResultsPage: React.FC = () => {
             transition={{ delay: 0.5 }}
           >
             <Sparkles className="w-3 h-3 text-indigo-400" />
-            <span>Elegida por mejor valoración entre {otherMatches.length + 1} coincidencias</span>
+            <span>Elegida por mejor valoración entre {results.length} coincidencias</span>
           </motion.div>
         )}
       </motion.div>
@@ -173,12 +175,13 @@ const ResultsPage: React.FC = () => {
       {/* Main Content - Movie Card */}
       <div className="flex-1 px-4 pb-4 flex flex-col justify-center items-center min-h-0 z-10">
         <motion.div
-          initial={{ scale: 0.8, opacity: 0 }}
+          key={displayMovie.id}
+          initial={{ scale: 0.95, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.2, type: "spring" }}
-          className="w-full max-w-md"
+          transition={{ delay: 0.1 }}
+          className="w-full max-w-md h-full max-h-[500px]"
         >
-          <Card noPadding className="bg-slate-900 shadow-2xl rounded-3xl overflow-hidden flex flex-col max-h-[500px] border border-white/10">
+          <Card noPadding className="bg-slate-900 shadow-2xl rounded-3xl overflow-hidden flex flex-col h-full border border-white/10">
 
             {/* Movie Poster */}
             <div className="relative h-48 shrink-0 bg-slate-800 overflow-hidden">
@@ -197,8 +200,8 @@ const ResultsPage: React.FC = () => {
                 transition={{ delay: 0.5, type: "spring" }}
               >
                 <div className={`${isShowingPrimary
-                    ? (isPerfectMatch ? 'bg-gradient-to-r from-green-400 to-emerald-500' : 'bg-gradient-to-r from-indigo-500 to-purple-600')
-                    : 'bg-slate-600'
+                  ? (isPerfectMatch ? 'bg-gradient-to-r from-green-400 to-emerald-500' : 'bg-gradient-to-r from-indigo-500 to-purple-600')
+                  : 'bg-slate-600'
                   } text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg flex items-center gap-2`}
                 >
                   <Heart className="w-4 h-4 fill-white" />
@@ -210,8 +213,8 @@ const ResultsPage: React.FC = () => {
               </motion.div>
             </div>
 
-            {/* Movie Info */}
-            <div className="p-5 flex flex-col gap-4 overflow-y-auto hide-scrollbar relative -mt-8 bg-slate-900 rounded-t-3xl flex-1">
+            {/* Movie Info - SCROLLABLE CONTENT */}
+            <div className="p-5 flex flex-col gap-4 overflow-y-auto relative -mt-8 bg-slate-900 rounded-t-3xl flex-1 custom-scrollbar">
               <div>
                 <div className="flex justify-between items-start mb-2">
                   <h2 className="text-xl font-bold text-white leading-tight pr-4">{displayMovie.title}</h2>
@@ -225,11 +228,11 @@ const ResultsPage: React.FC = () => {
                   <span>•</span>
                   <span>{typeof displayMovie.duration === 'number' ? `${Math.floor(displayMovie.duration / 60)}h ${displayMovie.duration % 60}m` : displayMovie.duration}</span>
                   <span>•</span>
-                  <span className="truncate max-w-[150px]">{displayMovie.genres.join(', ')}</span>
+                  <span className="truncate max-w-[150px]">{displayMovie.genres?.join(', ')}</span>
                 </div>
               </div>
 
-              {/* Watch Providers */}
+              {/* Watch Providers - ALWAYS VISIBLE */}
               {displayMovie.watchProviders && displayMovie.watchProviders.length > 0 ? (
                 <div className="bg-white/5 p-4 rounded-xl border border-white/10 shrink-0">
                   <div className="flex items-center gap-2 mb-3 text-slate-300">
@@ -259,7 +262,7 @@ const ResultsPage: React.FC = () => {
                 </div>
               )}
 
-              <p className="text-sm text-slate-400 leading-relaxed line-clamp-3">
+              <p className="text-sm text-slate-400 leading-relaxed">
                 {displayMovie.overview}
               </p>
 
@@ -287,7 +290,7 @@ const ResultsPage: React.FC = () => {
         </motion.div>
       </div>
 
-      {/* Other Matches */}
+      {/* Other Matches Horizontal Carousel */}
       {otherMatches.length > 0 && (
         <motion.div
           className="px-6 pb-2 shrink-0 z-20"
@@ -296,12 +299,12 @@ const ResultsPage: React.FC = () => {
           transition={{ delay: 0.7 }}
         >
           <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Otras coincidencias</p>
-          <div className="flex gap-3 overflow-x-auto pb-2 snap-x hide-scrollbar">
+          <div className="flex gap-3 overflow-x-auto pb-4 snap-x hide-scrollbar">
             <button
               onClick={() => setSelectedMovieId(null)}
               className={`shrink-0 w-14 snap-start transition-all rounded-lg overflow-hidden ${isShowingPrimary ? 'ring-2 ring-indigo-500 opacity-100' : 'opacity-50'}`}
             >
-              <img src={primaryMatch?.posterPath} className="w-14 h-20 object-cover bg-slate-700" />
+              <img src={primaryMatch?.posterPath} className="w-14 h-20 object-cover bg-slate-700" alt="Primary" />
             </button>
             {otherMatches.map(movie => (
               <button
@@ -309,7 +312,7 @@ const ResultsPage: React.FC = () => {
                 onClick={() => setSelectedMovieId(movie.id)}
                 className={`shrink-0 w-14 snap-start transition-all rounded-lg overflow-hidden ${selectedMovieId === movie.id ? 'ring-2 ring-indigo-500 opacity-100' : 'opacity-50'}`}
               >
-                <img src={movie.posterPath} className="w-14 h-20 object-cover bg-slate-700" />
+                <img src={movie.posterPath} className="w-14 h-20 object-cover bg-slate-700" alt={movie.title} />
               </button>
             ))}
           </div>

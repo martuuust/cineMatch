@@ -12,7 +12,7 @@ export class RoomService {
     /**
      * Create a new room with a host user
      */
-    async createRoom(hostName: string, genreId?: number): Promise<{ room: Room; user: User }> {
+    async createRoom(hostName: string, genreIds?: number[]): Promise<{ room: Room; user: User }> {
         // Validate input
         if (!hostName || hostName.trim().length === 0) {
             throw new AppError('User name is required', ErrorCode.VALIDATION_ERROR);
@@ -24,13 +24,13 @@ export class RoomService {
 
         // Get movies from vote service (ensures consistency with frontend)
         let movies: import('../types').Movie[];
-        
-        if (genreId) {
-            movies = await voteService.getMoviesByGenre(genreId);
+
+        if (genreIds && genreIds.length > 0) {
+            movies = await voteService.getMoviesByGenres(genreIds);
         } else {
             movies = await voteService.getAllMoviesAsync();
         }
-        
+
         const movieIds = movies.map(m => m.id);
 
         // Create host user first (without roomId, will update after room creation)
