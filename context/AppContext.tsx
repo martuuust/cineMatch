@@ -53,7 +53,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         setMovies(formattedMovies);
       } catch (err) {
         console.error('Failed to load movies:', err);
-        setError('Failed to load movies from server');
+        setError('Error al cargar películas del servidor');
       }
     };
     loadMovies();

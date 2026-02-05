@@ -13,6 +13,7 @@ export interface Movie {
     providerName: string;
     logoPath: string;
   }[];
+  watchUrl?: string;
 }
 
 export interface User {

@@ -6,7 +6,7 @@
 import { config } from '../config';
 import { Movie } from '../types';
 
-const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p/w500';
+const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p/original';
 
 interface TMDBMovie {
     id: number;
@@ -123,7 +123,8 @@ export class TMDBService {
                         releaseYear: tmdbMovie.release_date
                             ? parseInt(tmdbMovie.release_date.split('-')[0])
                             : new Date().getFullYear(),
-                        watchProviders: details?.watchProviders || []
+                        watchProviders: details?.watchProviders || [],
+                        watchUrl: details?.watchUrl
                     };
 
                     movies.push(movie);
@@ -149,6 +150,7 @@ export class TMDBService {
         runtime: number;
         watchProviders: { providerId: number; providerName: string; logoPath: string }[];
         fallbackOverview?: string;
+        watchUrl?: string;
     } | null> {
         try {
             const url = `${this.baseUrl}/movie/${movieId}?api_key=${this.apiKey}&language=es-ES&append_to_response=watch/providers,translations`;
@@ -158,6 +160,7 @@ export class TMDBService {
 
             const data = await response.json() as any;
             const providers = data['watch/providers']?.results?.ES?.flatrate || [];
+            const watchLink = data['watch/providers']?.results?.ES?.link || '';
 
             // Find English overview as fallback
             const translations = data.translations?.translations || [];
@@ -171,7 +174,8 @@ export class TMDBService {
                     providerName: p.provider_name,
                     logoPath: `${TMDB_IMAGE_BASE}${p.logo_path}`
                 })),
-                fallbackOverview
+                fallbackOverview,
+                watchUrl: watchLink
             };
         } catch {
             return null;
@@ -227,15 +231,15 @@ export class TMDBService {
         try {
             // Join with pipe (|) for OR logic (can have any of the genres)
             const genreParam = genreIds.join('|');
-            
+
             // Strategy:
             // 1. Try a random page from 1 to 20 to ensure good variety
             // 2. If that page is empty (out of bounds), use the total_pages info from response to pick a valid random page
             // 3. Fallback to page 1 as last resort
-            
+
             let page = Math.floor(Math.random() * 20) + 1;
             console.log(`[TMDB] Genres: ${genreIds.join(',')}, Trying random page: ${page}`);
-            
+
             let url = `${this.baseUrl}/discover/movie?api_key=${this.apiKey}&language=es-ES&with_genres=${genreParam}&sort_by=popularity.desc&include_adult=false&include_video=false&page=${page}`;
             let response = await fetch(url);
             let data = await response.json() as TMDBResponse;
@@ -243,12 +247,12 @@ export class TMDBService {
             // Check if we got results
             if (!data.results || data.results.length === 0) {
                 console.log(`[TMDB] Page ${page} was empty.`);
-                
+
                 // If we have total_pages info, pick a valid random page
                 if (data.total_pages && data.total_pages > 0) {
                     const maxPage = Math.min(data.total_pages, 50); // Cap at 50 to ensure relevance
                     const newPage = Math.floor(Math.random() * maxPage) + 1;
-                    
+
                     if (newPage !== page) {
                         console.log(`[TMDB] Retrying with valid random page: ${newPage} (Total pages: ${data.total_pages})`);
                         url = `${this.baseUrl}/discover/movie?api_key=${this.apiKey}&language=es-ES&with_genres=${genreParam}&sort_by=popularity.desc&include_adult=false&include_video=false&page=${newPage}`;
@@ -256,7 +260,7 @@ export class TMDBService {
                         data = await response.json() as TMDBResponse;
                     }
                 }
-                
+
                 // Final fallback to page 1 if still empty
                 if (!data.results || data.results.length === 0) {
                     console.log(`[TMDB] Still no results, falling back to page 1`);
@@ -289,7 +293,8 @@ export class TMDBService {
                     releaseYear: tmdbMovie.release_date
                         ? parseInt(tmdbMovie.release_date.split('-')[0])
                         : new Date().getFullYear(),
-                    watchProviders: details?.watchProviders || []
+                    watchProviders: details?.watchProviders || [],
+                    watchUrl: details?.watchUrl
                 });
             }
 

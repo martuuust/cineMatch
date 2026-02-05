@@ -9,7 +9,7 @@ export const MOCK_MOVIES: Movie[] = [
     {
         id: 1,
         title: "Origen",
-        posterPath: "https://image.tmdb.org/t/p/w500/9gk7adHYeDvHkCSEqAvQNLV5Ber.jpg",
+        posterPath: "https://image.tmdb.org/t/p/original/9gk7adHYeDvHkCSEqAvQNLV5Ber.jpg",
         rating: 8.8,
         duration: 148,
         genres: ["Ciencia Ficción", "Acción", "Suspense"],
@@ -18,7 +18,7 @@ export const MOCK_MOVIES: Movie[] = [
     {
         id: 2,
         title: "El Gran Hotel Budapest",
-        posterPath: "https://image.tmdb.org/t/p/w500/eWdyYQreja6JGCzqHWXpWHDrrPo.jpg",
+        posterPath: "https://image.tmdb.org/t/p/original/eWdyYQreja6JGCzqHWXpWHDrrPo.jpg",
         rating: 8.1,
         duration: 99,
         genres: ["Comedia", "Aventura", "Drama"],
@@ -27,7 +27,7 @@ export const MOCK_MOVIES: Movie[] = [
     {
         id: 3,
         title: "Spider-Man: Cruzando el Multiverso",
-        posterPath: "https://image.tmdb.org/t/p/w500/8Vt6mWEReuy4Of61Lnj5Xj704m8.jpg",
+        posterPath: "https://image.tmdb.org/t/p/original/8Vt6mWEReuy4Of61Lnj5Xj704m8.jpg",
         rating: 8.7,
         duration: 140,
         genres: ["Animación", "Acción", "Aventura"],
@@ -36,7 +36,7 @@ export const MOCK_MOVIES: Movie[] = [
     {
         id: 4,
         title: "La La Land",
-        posterPath: "https://image.tmdb.org/t/p/w500/uDO8zWDhfWwoFdKS4fzkUJt0Rf0.jpg",
+        posterPath: "https://image.tmdb.org/t/p/original/uDO8zWDhfWwoFdKS4fzkUJt0Rf0.jpg",
         rating: 8.0,
         duration: 128,
         genres: ["Musical", "Romance", "Drama"],
@@ -45,7 +45,7 @@ export const MOCK_MOVIES: Movie[] = [
     {
         id: 5,
         title: "Todo a la vez en todas partes",
-        posterPath: "https://image.tmdb.org/t/p/w500/w3LxiVYdWWRvEVdn5RYq6jIqkb1.jpg",
+        posterPath: "https://image.tmdb.org/t/p/original/w3LxiVYdWWRvEVdn5RYq6jIqkb1.jpg",
         rating: 7.8,
         duration: 139,
         genres: ["Aventura", "Ciencia Ficción", "Comedia"],
@@ -54,7 +54,7 @@ export const MOCK_MOVIES: Movie[] = [
     {
         id: 6,
         title: "El Caballero Oscuro",
-        posterPath: "https://image.tmdb.org/t/p/w500/qJ2tW6WMUDux911r6m7haRef0WH.jpg",
+        posterPath: "https://image.tmdb.org/t/p/original/qJ2tW6WMUDux911r6m7haRef0WH.jpg",
         rating: 9.0,
         duration: 152,
         genres: ["Acción", "Crimen", "Drama"],
@@ -63,7 +63,7 @@ export const MOCK_MOVIES: Movie[] = [
     {
         id: 7,
         title: "Parásitos",
-        posterPath: "https://image.tmdb.org/t/p/w500/7IiTTgloJzvGI1TAYymCfbfl3vT.jpg",
+        posterPath: "https://image.tmdb.org/t/p/original/7IiTTgloJzvGI1TAYymCfbfl3vT.jpg",
         rating: 8.5,
         duration: 132,
         genres: ["Suspense", "Drama", "Comedia"],
@@ -72,7 +72,7 @@ export const MOCK_MOVIES: Movie[] = [
     {
         id: 8,
         title: "Interstellar",
-        posterPath: "https://image.tmdb.org/t/p/w500/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg",
+        posterPath: "https://image.tmdb.org/t/p/original/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg",
         rating: 8.6,
         duration: 169,
         genres: ["Ciencia Ficción", "Aventura", "Drama"],
@@ -81,7 +81,7 @@ export const MOCK_MOVIES: Movie[] = [
     {
         id: 9,
         title: "Cadena Perpetua",
-        posterPath: "https://image.tmdb.org/t/p/w500/q6y0Go1tsGEsmtFryDOJo3dEmqu.jpg",
+        posterPath: "https://image.tmdb.org/t/p/original/q6y0Go1tsGEsmtFryDOJo3dEmqu.jpg",
         rating: 9.3,
         duration: 142,
         genres: ["Drama", "Crimen"],
@@ -90,7 +90,7 @@ export const MOCK_MOVIES: Movie[] = [
     {
         id: 10,
         title: "Pulp Fiction",
-        posterPath: "https://image.tmdb.org/t/p/w500/d5iIlFn5s0ImszYzBPb8JPIfbXD.jpg",
+        posterPath: "https://image.tmdb.org/t/p/original/d5iIlFn5s0ImszYzBPb8JPIfbXD.jpg",
         rating: 8.9,
         duration: 154,
         genres: ["Crimen", "Drama", "Comedia"],
@@ -99,7 +99,7 @@ export const MOCK_MOVIES: Movie[] = [
     {
         id: 11,
         title: "Whiplash",
-        posterPath: "https://image.tmdb.org/t/p/w500/7fn624j5lj3xTme2SgiLCeuedmO.jpg",
+        posterPath: "https://image.tmdb.org/t/p/original/7fn624j5lj3xTme2SgiLCeuedmO.jpg",
         rating: 8.5,
         duration: 107,
         genres: ["Drama", "Música"],
@@ -108,7 +108,7 @@ export const MOCK_MOVIES: Movie[] = [
     {
         id: 12,
         title: "Matrix",
-        posterPath: "https://image.tmdb.org/t/p/w500/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg",
+        posterPath: "https://image.tmdb.org/t/p/original/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg",
         rating: 8.7,
         duration: 136,
         genres: ["Ciencia Ficción", "Acción"],
@@ -117,7 +117,7 @@ export const MOCK_MOVIES: Movie[] = [
     {
         id: 13,
         title: "Coco",
-        posterPath: "https://image.tmdb.org/t/p/w500/eKi8dIrr8voobbaGzDpe8w0PVbC.jpg",
+        posterPath: "https://image.tmdb.org/t/p/original/eKi8dIrr8voobbaGzDpe8w0PVbC.jpg",
         rating: 8.4,
         duration: 105,
         genres: ["Animación", "Familia", "Fantasía"],
@@ -126,7 +126,7 @@ export const MOCK_MOVIES: Movie[] = [
     {
         id: 14,
         title: "El Viaje de Chihiro",
-        posterPath: "https://image.tmdb.org/t/p/w500/39wmItIWsg5sZMyRUHLkWBcuVCM.jpg",
+        posterPath: "https://image.tmdb.org/t/p/original/39wmItIWsg5sZMyRUHLkWBcuVCM.jpg",
         rating: 8.6,
         duration: 125,
         genres: ["Animación", "Fantasía", "Aventura"],
@@ -135,7 +135,7 @@ export const MOCK_MOVIES: Movie[] = [
     {
         id: 15,
         title: "El Padrino",
-        posterPath: "https://image.tmdb.org/t/p/w500/3bhkrj58Vtu7enYsRolD1fZdja1.jpg",
+        posterPath: "https://image.tmdb.org/t/p/original/3bhkrj58Vtu7enYsRolD1fZdja1.jpg",
         rating: 9.2,
         duration: 175,
         genres: ["Crimen", "Drama"],
@@ -144,7 +144,7 @@ export const MOCK_MOVIES: Movie[] = [
     {
         id: 16,
         title: "Dune",
-        posterPath: "https://image.tmdb.org/t/p/w500/d5NXSklXo0qyIYkgV94XAgMIckC.jpg",
+        posterPath: "https://image.tmdb.org/t/p/original/d5NXSklXo0qyIYkgV94XAgMIckC.jpg",
         rating: 8.0,
         duration: 155,
         genres: ["Ciencia Ficción", "Aventura", "Drama"],
@@ -153,7 +153,7 @@ export const MOCK_MOVIES: Movie[] = [
     {
         id: 17,
         title: "Oppenheimer",
-        posterPath: "https://image.tmdb.org/t/p/w500/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg",
+        posterPath: "https://image.tmdb.org/t/p/original/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg",
         rating: 8.5,
         duration: 180,
         genres: ["Drama", "Historia", "Biografía"],
@@ -162,7 +162,7 @@ export const MOCK_MOVIES: Movie[] = [
     {
         id: 18,
         title: "Déjame Salir",
-        posterPath: "https://image.tmdb.org/t/p/w500/tFXcEccSQMf3lfhfXKSU9iRBpa3.jpg",
+        posterPath: "https://image.tmdb.org/t/p/original/tFXcEccSQMf3lfhfXKSU9iRBpa3.jpg",
         rating: 7.7,
         duration: 104,
         genres: ["Terror", "Suspense", "Misterio"],
@@ -171,7 +171,7 @@ export const MOCK_MOVIES: Movie[] = [
     {
         id: 19,
         title: "Barbie",
-        posterPath: "https://image.tmdb.org/t/p/w500/iuFNMS8U5cb6xfzi51Dbkovj7vM.jpg",
+        posterPath: "https://image.tmdb.org/t/p/original/iuFNMS8U5cb6xfzi51Dbkovj7vM.jpg",
         rating: 7.0,
         duration: 114,
         genres: ["Comedia", "Aventura", "Fantasía"],
@@ -180,7 +180,7 @@ export const MOCK_MOVIES: Movie[] = [
     {
         id: 20,
         title: "Your Name",
-        posterPath: "https://image.tmdb.org/t/p/w500/q719jXXEzOoYaps6babgKnONONX.jpg",
+        posterPath: "https://image.tmdb.org/t/p/original/q719jXXEzOoYaps6babgKnONONX.jpg",
         rating: 8.4,
         duration: 106,
         genres: ["Animación", "Romance", "Fantasía"],

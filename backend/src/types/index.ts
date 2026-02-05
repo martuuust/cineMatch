@@ -60,6 +60,7 @@ export interface Movie {
         providerName: string;
         logoPath: string;
     }[];
+    watchUrl?: string;
 }
 
 // ============= API REQUEST DTOs =============

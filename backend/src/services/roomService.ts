@@ -15,11 +15,11 @@ export class RoomService {
     async createRoom(hostName: string, genreIds?: number[]): Promise<{ room: Room; user: User }> {
         // Validate input
         if (!hostName || hostName.trim().length === 0) {
-            throw new AppError('User name is required', ErrorCode.VALIDATION_ERROR);
+            throw new AppError('El nombre de usuario es obligatorio', ErrorCode.VALIDATION_ERROR);
         }
 
         if (hostName.trim().length > 30) {
-            throw new AppError('User name must be 30 characters or less', ErrorCode.VALIDATION_ERROR);
+            throw new AppError('El nombre debe tener 30 caracteres o menos', ErrorCode.VALIDATION_ERROR);
         }
 
         // Get movies from vote service (ensures consistency with frontend)
@@ -53,32 +53,32 @@ export class RoomService {
     joinRoom(roomCode: string, userName: string): { room: Room; user: User } {
         // Validate input
         if (!roomCode || roomCode.trim().length === 0) {
-            throw new AppError('Room code is required', ErrorCode.VALIDATION_ERROR);
+            throw new AppError('El código de sala es obligatorio', ErrorCode.VALIDATION_ERROR);
         }
 
         if (!userName || userName.trim().length === 0) {
-            throw new AppError('User name is required', ErrorCode.VALIDATION_ERROR);
+            throw new AppError('El nombre de usuario es obligatorio', ErrorCode.VALIDATION_ERROR);
         }
 
         if (userName.trim().length > 30) {
-            throw new AppError('User name must be 30 characters or less', ErrorCode.VALIDATION_ERROR);
+            throw new AppError('El nombre debe tener 30 caracteres o menos', ErrorCode.VALIDATION_ERROR);
         }
 
         // Find room
         const room = dataStore.getRoomByCode(roomCode.toUpperCase().trim());
         if (!room) {
-            throw new AppError('Room not found', ErrorCode.ROOM_NOT_FOUND, 404);
+            throw new AppError('Sala no encontrada', ErrorCode.ROOM_NOT_FOUND, 404);
         }
 
         // Check room status
         if (room.status !== RoomStatus.WAITING) {
-            throw new AppError('Room voting has already started', ErrorCode.ROOM_ALREADY_STARTED);
+            throw new AppError('La votación ya ha comenzado', ErrorCode.ROOM_ALREADY_STARTED);
         }
 
         // Check room capacity (optional limit)
         const existingUsers = dataStore.getUsersByRoom(room.id);
         if (existingUsers.length >= 10) {
-            throw new AppError('Room is full (max 10 users)', ErrorCode.ROOM_FULL);
+            throw new AppError('La sala está llena (máx 10 usuarios)', ErrorCode.ROOM_FULL);
         }
 
         // Create user
@@ -124,23 +124,23 @@ export class RoomService {
     startVoting(roomCode: string, userId: string): void {
         const room = dataStore.getRoomByCode(roomCode);
         if (!room) {
-            throw new AppError('Room not found', ErrorCode.ROOM_NOT_FOUND, 404);
+            throw new AppError('Sala no encontrada', ErrorCode.ROOM_NOT_FOUND, 404);
         }
 
         // Verify user is host
         if (room.hostId !== userId) {
-            throw new AppError('Only the host can start voting', ErrorCode.USER_NOT_HOST, 403);
+            throw new AppError('Solo el anfitrión puede iniciar la votación', ErrorCode.USER_NOT_HOST, 403);
         }
 
         // Check room status
         if (room.status !== RoomStatus.WAITING) {
-            throw new AppError('Voting has already started or finished', ErrorCode.ROOM_ALREADY_STARTED);
+            throw new AppError('La votación ya ha comenzado o terminado', ErrorCode.ROOM_ALREADY_STARTED);
         }
 
         // Check minimum users
         const users = dataStore.getUsersByRoom(room.id);
         if (users.length < 2) {
-            throw new AppError('At least 2 users are required to start voting', ErrorCode.ROOM_NOT_READY);
+            throw new AppError('Se necesitan al menos 2 usuarios para empezar', ErrorCode.ROOM_NOT_READY);
         }
 
         // Update room status

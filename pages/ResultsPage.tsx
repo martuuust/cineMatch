@@ -125,7 +125,7 @@ const ResultsPage: React.FC = () => {
 
       {/* Main Layout - Split for Desktop, Stacked for Mobile - No Page Scroll */}
       <div className="flex-1 flex flex-col md:flex-row relative z-10 w-full h-full p-4 gap-4 max-w-6xl mx-auto">
-        
+
         {/* Left/Top: Visuals & Header */}
         <div className="flex-1 flex flex-col min-h-0">
           {/* Header Badge */}
@@ -166,7 +166,7 @@ const ResultsPage: React.FC = () => {
                   alt={displayMovie.title}
                   className="w-full h-full object-cover"
                 />
-                
+
                 {/* Winner Badge */}
                 {isShowingPrimary && isPerfectMatch && (
                   <div className="absolute top-4 left-4 z-10">
@@ -189,15 +189,15 @@ const ResultsPage: React.FC = () => {
           {otherMatches.length > 0 && (
             <div className="mt-4 flex-shrink-0 h-24">
               <div className="flex gap-3 overflow-x-auto pb-2 h-full items-center justify-center snap-x hide-scrollbar px-2">
-                 <button
-                    onClick={() => setSelectedMovieId(null)}
-                    className={`
+                <button
+                  onClick={() => setSelectedMovieId(null)}
+                  className={`
                       relative flex-shrink-0 h-20 aspect-[2/3] rounded-lg overflow-hidden snap-center transition-all duration-200
                       ${isShowingPrimary ? 'ring-2 ring-green-500 scale-105 z-10' : 'opacity-60 hover:opacity-100 grayscale hover:grayscale-0'}
                     `}
-                  >
-                    <img src={primaryMatch?.posterPath} className="w-full h-full object-cover" alt="Winner" />
-                  </button>
+                >
+                  <img src={primaryMatch?.posterPath} className="w-full h-full object-cover" alt="Winner" />
+                </button>
 
                 {otherMatches.map((movie) => (
                   <button
@@ -222,7 +222,7 @@ const ResultsPage: React.FC = () => {
             <h1 className="text-3xl font-black text-white leading-tight mb-2">
               {displayMovie.title}
             </h1>
-            
+
             <div className="flex flex-wrap items-center gap-2 mb-4">
               <span className="px-2 py-1 bg-white/10 rounded-md text-xs font-bold text-white border border-white/5">
                 {displayMovie.releaseYear}
@@ -247,10 +247,10 @@ const ResultsPage: React.FC = () => {
                   {displayMovie.watchProviders.map((provider: any) => (
                     <div key={provider.providerId} className="flex items-center gap-2 bg-black/20 px-3 py-2 rounded-lg border border-white/5">
                       {provider.logoPath && (
-                        <img 
-                          src={provider.logoPath} 
+                        <img
+                          src={provider.logoPath}
                           alt={provider.providerName}
-                          className="w-6 h-6 rounded-md" 
+                          className="w-6 h-6 rounded-md"
                         />
                       )}
                       <span className="text-xs font-medium text-slate-300">{provider.providerName}</span>
@@ -263,13 +263,20 @@ const ResultsPage: React.FC = () => {
 
           {/* Action Buttons - Fixed at bottom of panel */}
           <div className="pt-4 mt-auto border-t border-white/10 grid grid-cols-2 gap-3">
-            <Button 
+            <Button
               className="bg-white text-slate-900 hover:bg-slate-200"
               icon={<PlayCircle className="w-4 h-4" />}
+              onClick={() => {
+                if (displayMovie.watchUrl) {
+                  window.open(displayMovie.watchUrl, '_blank');
+                } else {
+                  window.open(`https://www.google.com/search?q=ver+${encodeURIComponent(displayMovie.title)}+online`, '_blank');
+                }
+              }}
             >
               Ver Ahora
             </Button>
-            <Button 
+            <Button
               variant="outline"
               className="border-white/20 text-white hover:bg-white/10"
               onClick={() => {
