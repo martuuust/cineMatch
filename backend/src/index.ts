@@ -19,7 +19,12 @@ const server = http.createServer(app);
 // Create Socket.io server
 const io = new SocketServer(server, {
     cors: {
-        origin: config.corsOrigin,
+        origin: (origin, callback) => {
+            // Allow requests with no origin
+            if (!origin) return callback(null, true);
+            // Allow any origin
+            callback(null, true);
+        },
         methods: ['GET', 'POST'],
         credentials: true
     },

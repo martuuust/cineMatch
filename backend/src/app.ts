@@ -13,7 +13,12 @@ export function createApp(): Application {
 
     // CORS configuration
     app.use(cors({
-        origin: config.corsOrigin,
+        origin: (origin, callback) => {
+            // Allow requests with no origin (like mobile apps or curl requests)
+            if (!origin) return callback(null, true);
+            // Allow any origin in development/tunneling
+            callback(null, true);
+        },
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
         allowedHeaders: ['Content-Type', 'Authorization'],
         credentials: true

@@ -18,8 +18,8 @@ export class RoomService {
             throw new AppError('El nombre de usuario es obligatorio', ErrorCode.VALIDATION_ERROR);
         }
 
-        if (hostName.trim().length > 30) {
-            throw new AppError('El nombre debe tener 30 caracteres o menos', ErrorCode.VALIDATION_ERROR);
+        if (hostName.trim().length > 50) {
+            throw new AppError('El nombre debe tener 50 caracteres o menos', ErrorCode.VALIDATION_ERROR);
         }
 
         // Get movies from vote service (ensures consistency with frontend)
@@ -60,8 +60,8 @@ export class RoomService {
             throw new AppError('El nombre de usuario es obligatorio', ErrorCode.VALIDATION_ERROR);
         }
 
-        if (userName.trim().length > 30) {
-            throw new AppError('El nombre debe tener 30 caracteres o menos', ErrorCode.VALIDATION_ERROR);
+        if (userName.trim().length > 50) {
+            throw new AppError('El nombre debe tener 50 caracteres o menos', ErrorCode.VALIDATION_ERROR);
         }
 
         // Find room
@@ -169,10 +169,24 @@ export class RoomService {
 
     /**
      * Check if all users have finished voting
+     * Consider users finished if:
+     * 1. They explicitly finished voting (hasFinished = true)
+     * 2. OR they are disconnected (socketId = null) - to prevent blocking
      */
     haveAllUsersFinished(roomId: string): boolean {
         const users = dataStore.getUsersByRoom(roomId);
-        return users.length > 0 && users.every(u => u.hasFinished);
+        
+        // If no users, return false
+        if (users.length === 0) return false;
+
+        // Check if every user has either finished OR is disconnected
+        const allFinishedOrDisconnected = users.every(u => u.hasFinished || !u.socketId);
+        
+        // Also ensure at least one active user has finished to avoid premature closing 
+        // if everyone disconnects before starting
+        const atLeastOneFinished = users.some(u => u.hasFinished);
+
+        return allFinishedOrDisconnected && atLeastOneFinished;
     }
 
     /**

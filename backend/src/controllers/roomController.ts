@@ -53,6 +53,8 @@ export class RoomController {
      */
     async join(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
+            console.log(`[RoomController] Join request:`, req.body);
+
             // Validate request
             const errors = validationResult(req);
             if (!errors.isEmpty()) {
@@ -143,7 +145,7 @@ export const createRoomValidation = [
     body('userName')
         .trim()
         .notEmpty().withMessage('User name is required')
-        .isLength({ max: 30 }).withMessage('User name must be 30 characters or less'),
+        .isLength({ max: 50 }).withMessage('User name must be 50 characters or less'),
     body('genreIds')
         .optional()
         .isArray().withMessage('Genre IDs must be an array')
@@ -157,11 +159,11 @@ export const joinRoomValidation = [
     body('roomCode')
         .trim()
         .notEmpty().withMessage('Room code is required')
-        .matches(/^[A-Z0-9]{4}-[A-Z0-9]{4}$/i).withMessage('Invalid room code format'),
+        .matches(/^CINE-[A-Z0-9]{4}$/i).withMessage('Invalid room code format (must be CINE-XXXX)'),
     body('userName')
         .trim()
         .notEmpty().withMessage('User name is required')
-        .isLength({ max: 30 }).withMessage('User name must be 30 characters or less')
+        .isLength({ max: 50 }).withMessage('User name must be 50 characters or less')
 ];
 
 export const roomController = new RoomController();

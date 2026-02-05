@@ -5,6 +5,9 @@
 
 import { dataStore } from '../data/store';
 import { User, UserPublicInfo } from '../types';
+import { roomService } from './roomService';
+import { voteService } from './voteService';
+import { RoomStatus } from '../types';
 // Error utilities available if needed for future extensions
 
 export class UserService {
@@ -32,14 +35,27 @@ export class UserService {
     /**
      * Handle user disconnection
      */
-    handleDisconnect(socketId: string): { user: User; roomId: string } | null {
+    handleDisconnect(socketId: string): { user: User; roomId: string; shouldFinish: boolean } | null {
         const user = dataStore.getUserBySocketId(socketId);
         if (!user) return null;
 
-        // Just clear socket, don't remove user (allow reconnection)
+        // Only clear socket association, DO NOT remove user from room
+        // This allows users to reconnect/refresh without losing their spot
         dataStore.updateUserSocket(user.id, null);
-
-        return { user, roomId: user.roomId };
+        
+        // Check if room should finish now that this user is "gone" (inactive)
+        let shouldFinish = false;
+        const room = dataStore.getRoomById(user.roomId);
+        
+        if (room && room.status === RoomStatus.VOTING) {
+            // Check if ALL remaining active users have finished
+            // This prevents the room from being blocked by the disconnected user
+            if (roomService.haveAllUsersFinished(room.id)) {
+                shouldFinish = true;
+            }
+        }
+        
+        return { user, roomId: user.roomId, shouldFinish };
     }
 
     /**

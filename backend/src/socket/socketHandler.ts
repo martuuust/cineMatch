@@ -24,6 +24,7 @@ const EVENTS = {
     START_VOTING: 'start-voting',
     VOTE: 'vote',
     RECONNECT: 'reconnect-user',
+    LEAVE_ROOM: 'leave-room',
 
     // Server -> Client
     USER_LIST_UPDATED: 'user-list-updated',
@@ -35,12 +36,12 @@ const EVENTS = {
 
 export function setupSocketHandlers(io: Server): void {
     io.on('connection', (socket: Socket) => {
-        console.log(`[Socket] Client connected: ${socket.id}`);
+        console.log(`[Socket] Client connected: ${socket.id}, Handshake Origin: ${socket.handshake.headers.origin}`);
 
         // ============= USER JOINED =============
         socket.on(EVENTS.USER_JOINED, (payload: UserJoinedPayload) => {
             try {
-                console.log(`[Socket] user-joined:`, payload);
+                console.log(`[Socket] user-joined event received from ${socket.id}:`, payload);
 
                 const { roomCode, userId } = payload;
 
@@ -80,6 +81,9 @@ export function setupSocketHandlers(io: Server): void {
 
                 // Broadcast updated user list
                 const users = roomService.getRoomUsers(room.id);
+                const roomSize = io.sockets.adapter.rooms.get(room.code)?.size || 0;
+                console.log(`[Socket] Broadcasting user-list-updated to room ${room.code}. Socket room size: ${roomSize}`);
+                
                 io.to(room.code).emit(EVENTS.USER_LIST_UPDATED, { users });
 
                 console.log(`[Socket] User ${user.name} joined room ${room.code}`);
@@ -224,6 +228,47 @@ export function setupSocketHandlers(io: Server): void {
             }
         });
 
+        // ============= LEAVE ROOM =============
+        socket.on(EVENTS.LEAVE_ROOM, (payload: { roomCode: string; userId: string }, callback?: () => void) => {
+            try {
+                console.log(`[Socket] leave-room:`, payload);
+                const { roomCode, userId } = payload;
+
+                if (!roomCode || !userId) {
+                    if (callback) callback();
+                    return;
+                }
+
+                const user = userService.getUserById(userId);
+                if (user) {
+                    userService.removeUser(userId);
+                    
+                    const room = roomService.getRoomByCode(roomCode);
+                    if (room) {
+                        const users = roomService.getRoomUsers(room.id);
+                        io.to(roomCode).emit(EVENTS.USER_LIST_UPDATED, { users });
+                        console.log(`[Socket] User ${user.name} left room ${roomCode}`);
+
+                        // If voting is in progress, check if remaining users have finished
+                        if (room.status === RoomStatus.VOTING && users.length > 0) {
+                            if (roomService.haveAllUsersFinished(room.id)) {
+                                console.log(`[Socket] All remaining users finished voting in room ${roomCode}`);
+                                const results = voteService.calculateResults(room.id);
+                                roomService.finishRoom(room.id);
+                                io.to(roomCode).emit(EVENTS.MATCHING_COMPLETE, results);
+                            }
+                        }
+                    }
+                }
+                
+                // Acknowledge receipt
+                if (callback) callback();
+            } catch (error) {
+                handleSocketError(socket, error);
+                if (callback) callback();
+            }
+        });
+
         // ============= DISCONNECT =============
         socket.on('disconnect', () => {
             try {
@@ -232,11 +277,20 @@ export function setupSocketHandlers(io: Server): void {
                 if (result) {
                     const room = roomService.getRoomById(result.roomId);
                     if (room) {
-                        // Broadcast updated user list (user still in list but disconnected)
+                        // Notify others that user is disconnected (optional, currently we just update list silently)
+                        // In a more advanced UI, we could show a "connection lost" icon next to the user
                         const users = roomService.getRoomUsers(room.id);
-                        io.to(room.code).emit(EVENTS.USER_LIST_UPDATED, { users });
+                        // io.to(room.code).emit(EVENTS.USER_LIST_UPDATED, { users }); 
+
+                        // If the disconnected user was the last one holding up the vote, FINISH IT
+                        if (result.shouldFinish) {
+                             console.log(`[Socket] Room ${room.code} finished because remaining active users are done (and blocked user disconnected)`);
+                             const results = voteService.calculateResults(room.id);
+                             roomService.finishRoom(room.id);
+                             io.to(room.code).emit(EVENTS.MATCHING_COMPLETE, results);
+                        }
                     }
-                    console.log(`[Socket] User ${result.user.name} disconnected`);
+                    console.log(`[Socket] User ${result.user.name} disconnected (marked as inactive)`);
                 } else {
                     console.log(`[Socket] Unknown client disconnected: ${socket.id}`);
                 }

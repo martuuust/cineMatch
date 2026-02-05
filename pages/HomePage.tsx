@@ -4,9 +4,11 @@ import { useNavigate } from 'react-router-dom';
 import { Film, Sparkles, Users, Zap } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Button from '../components/ui/Button';
+import { useAppContext } from '../context/AppContext';
 
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
+  const { leaveRoom, currentRoom, currentUser, isInitializing } = useAppContext();
   const [particles, setParticles] = useState<{ id: number; left: string; delay: string }[]>([]);
 
   useEffect(() => {
@@ -118,10 +120,38 @@ const HomePage: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
         >
+          {/* Rejoin Active Session */}
+          {currentRoom && !isInitializing && (
+             <motion.div
+               initial={{ opacity: 0, scale: 0.95 }}
+               animate={{ opacity: 1, scale: 1 }}
+               className="w-full"
+             >
+                <Button 
+                  fullWidth 
+                  size="lg" 
+                  onClick={() => navigate('/waiting-room', { 
+                    state: { 
+                      room: currentRoom, 
+                      user: currentUser 
+                    } 
+                  })}
+                  className="bg-emerald-600/80 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/20 border-l-4 border-emerald-400"
+                >
+                  <div className="flex flex-col items-start">
+                    <span className="text-xs uppercase tracking-wider font-bold opacity-80">Continuar sesión</span>
+                    <span className="flex items-center gap-2">
+                       Volver a Sala {currentRoom.code} <Zap className="w-4 h-4" />
+                    </span>
+                  </div>
+                </Button>
+             </motion.div>
+          )}
+
           <Button 
             fullWidth 
             size="lg" 
-            onClick={() => navigate('/create')}
+            onClick={() => { leaveRoom(); navigate('/create'); }}
             className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 shadow-lg shadow-indigo-500/30 btn-glow"
           >
             <Sparkles className="w-5 h-5 mr-2" />
@@ -131,7 +161,7 @@ const HomePage: React.FC = () => {
             fullWidth 
             variant="outline" 
             size="lg" 
-            onClick={() => navigate('/join')}
+            onClick={() => { leaveRoom(); navigate('/join'); }}
             className="border-white/20 text-white hover:bg-white/10 hover:border-white/30 backdrop-blur-sm"
           >
             <Users className="w-5 h-5 mr-2" />

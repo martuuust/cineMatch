@@ -6,14 +6,13 @@
 import { v4 as uuidv4 } from 'uuid';
 
 /**
- * Generates a unique room code in format XXXX-XXXX
+ * Generates a unique room code in format CINE-XXXX
  */
 export function generateRoomCode(): string {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Excluded confusing chars: I, O, 1, 0
-    let code = '';
+    let code = 'CINE-';
 
-    for (let i = 0; i < 8; i++) {
-        if (i === 4) code += '-';
+    for (let i = 0; i < 4; i++) {
         code += chars.charAt(Math.floor(Math.random() * chars.length));
     }
 
@@ -50,9 +49,9 @@ export function calculateProgress(votedCount: number, totalMovies: number): numb
 }
 
 /**
- * Validates room code format (XXXX-XXXX)
+ * Validates room code format (CINE-XXXX)
  */
 export function isValidRoomCode(code: string): boolean {
-    const pattern = /^[A-Z0-9]{4}-[A-Z0-9]{4}$/;
+    const pattern = /^CINE-[A-Z0-9]{4}$/;
     return pattern.test(code);
 }

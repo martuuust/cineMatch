@@ -58,10 +58,14 @@ const CreateRoomPage: React.FC = () => {
         if (!name.trim()) return;
         setLoading(true);
 
-        const success = await createRoom(name, genreIds.length > 0 ? genreIds : undefined);
-        if (success) {
-            navigate('/waiting');
-        } else {
+        try {
+            const { room, user } = await createRoom(name, genreIds.length > 0 ? genreIds : undefined);
+            if (room && user) {
+                navigate('/waiting', { state: { room, user } });
+            } else {
+                setLoading(false);
+            }
+        } catch (error) {
             setLoading(false);
         }
     };
@@ -175,9 +179,10 @@ const CreateRoomPage: React.FC = () => {
                     transition={{ type: "spring", duration: 0.5, delay: 0.2 }}
                 >
                     <Card className="bg-slate-900/50 border-white/10 backdrop-blur-xl shadow-2xl overflow-hidden">
-                        <div className="space-y-5 p-2">
+                        <form onSubmit={(e) => { e.preventDefault(); handleCreate(); }}>
+                            <div className="space-y-5 p-2">
 
-                            {/* Avatar Selection */}
+                                {/* Avatar Selection */}
                             <div>
                                 <label className="block text-xs font-bold text-slate-300 mb-3 text-center uppercase tracking-wider">
                                     Elige tu Avatar
@@ -186,6 +191,7 @@ const CreateRoomPage: React.FC = () => {
                                     {AVATARS.map((avatar, index) => (
                                         <motion.button
                                             key={avatar}
+                                            type="button"
                                             onClick={() => setSelectedAvatar(avatar)}
                                             className={`
                                                 w-14 h-14 flex items-center justify-center text-3xl rounded-2xl transition-all border-2
@@ -231,6 +237,7 @@ const CreateRoomPage: React.FC = () => {
                                         return (
                                             <motion.button
                                                 key={g.id}
+                                                type="button"
                                                 onClick={() => toggleGenre(g.id)}
                                                 className={`relative p-2 rounded-xl border transition-all flex flex-col items-center gap-1 overflow-hidden group ${isSelected
                                                     ? `bg-gradient-to-br ${g.color} border-transparent shadow-lg text-white scale-[1.02]`
@@ -282,7 +289,7 @@ const CreateRoomPage: React.FC = () => {
                             {/* Create Button */}
                             <Button
                                 fullWidth
-                                onClick={handleCreate}
+                                type="submit"
                                 disabled={!name.trim() || loading}
                                 isLoading={loading}
                                 size="lg"
@@ -292,6 +299,7 @@ const CreateRoomPage: React.FC = () => {
                                 {loading ? 'Creando...' : 'Crear Sala'}
                             </Button>
                         </div>
+                        </form>
                     </Card>
                 </motion.div>
             </div>

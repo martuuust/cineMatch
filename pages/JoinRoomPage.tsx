@@ -10,7 +10,7 @@ import Card from '../components/ui/Card';
 
 const JoinRoomPage: React.FC = () => {
   const navigate = useNavigate();
-  const { joinRoom } = useAppContext();
+  const { joinRoom, error: contextError } = useAppContext();
   const [code, setCode] = useState('');
   const [name, setName] = useState('');
   const [error, setError] = useState('');
@@ -27,39 +27,42 @@ const JoinRoomPage: React.FC = () => {
 
     // Combine avatar and name for display
     const displayName = `${selectedAvatar} ${name}`;
-    const success = await joinRoom(code.toUpperCase(), displayName);
-    if (success) {
-      navigate('/waiting');
-    } else {
-      setError('Código inválido. Asegúrate de que es correcto.');
+    const cleanCode = code.toUpperCase().replace(/\s/g, ''); // Remove spaces
+    
+    try {
+      const { room, user } = await joinRoom(cleanCode, displayName);
+      navigate('/waiting', { state: { room, user } });
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Error desconocido al unirse';
+      setError(errorMessage);
       setLoading(false);
     }
   };
 
   const handleCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Format code with uppercase
-    const value = e.target.value.toUpperCase().slice(0, 9);
+    // Format code with uppercase and remove spaces
+    const value = e.target.value.toUpperCase().replace(/\s/g, '').slice(0, 9);
     setCode(value);
     if (error) setError('');
   };
 
   return (
-    <div className="h-[100dvh] p-4 flex flex-col relative overflow-hidden bg-slate-950">
-      {/* Background Gradients */}
-      <div className="absolute top-[-20%] right-[-20%] w-[60%] h-[60%] bg-teal-600/20 blur-[100px] rounded-full pointer-events-none" />
-      <div className="absolute bottom-[-20%] left-[-20%] w-[60%] h-[60%] bg-cyan-600/20 blur-[100px] rounded-full pointer-events-none" />
+    <div className="min-h-[100dvh] p-4 flex flex-col relative overflow-y-auto bg-slate-950 supports-[min-height:100dvh]:min-h-[100dvh]">
+      {/* Background Gradients - Reduced blur for performance */}
+      <div className="absolute top-[-20%] right-[-20%] w-[60%] h-[60%] bg-teal-600/20 blur-[60px] rounded-full pointer-events-none transform-gpu" />
+      <div className="absolute bottom-[-20%] left-[-20%] w-[60%] h-[60%] bg-cyan-600/20 blur-[60px] rounded-full pointer-events-none transform-gpu" />
 
       {/* Back Button */}
       <div className="absolute top-4 left-4 z-20">
         <button
           onClick={() => navigate('/')}
-          className="p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all text-slate-400 hover:text-white"
+          className="p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all text-slate-400 hover:text-white backdrop-blur-md"
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
       </div>
 
-      <div className="flex-1 flex flex-col justify-center max-w-sm mx-auto w-full z-10 h-full">
+      <div className="flex-1 flex flex-col justify-center max-w-sm mx-auto w-full z-10 py-12 sm:py-0">
         {/* Header */}
         <motion.div
           className="mb-4 text-center flex-shrink-0"
@@ -82,18 +85,20 @@ const JoinRoomPage: React.FC = () => {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ type: "spring", duration: 0.5, delay: 0.2 }}
         >
-          <Card className="bg-slate-900/50 border-white/10 backdrop-blur-xl shadow-2xl overflow-hidden">
-            <div className="space-y-5 p-2">
+          <Card className="bg-slate-900/80 border-white/10 backdrop-blur-md shadow-2xl overflow-hidden">
+            <form onSubmit={(e) => { e.preventDefault(); handleJoin(); }}>
+              <div className="space-y-5 p-2">
 
-              {/* Avatar Selection */}
-              <div>
-                <label className="block text-xs font-bold text-slate-300 mb-3 text-center uppercase tracking-wider">
-                  Elige tu Avatar
-                </label>
+                {/* Avatar Selection */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-300 mb-3 text-center uppercase tracking-wider">
+                    Elige tu Avatar
+                  </label>
                 <div className="flex flex-wrap justify-center gap-2 max-h-[160px] overflow-y-auto custom-scrollbar px-1 pb-1">
                   {AVATARS.map((avatar, index) => (
                     <motion.button
                       key={avatar}
+                      type="button"
                       onClick={() => setSelectedAvatar(avatar)}
                       className={`
                                 w-14 h-14 flex items-center justify-center text-3xl rounded-2xl transition-all border-2
@@ -160,18 +165,19 @@ const JoinRoomPage: React.FC = () => {
               </AnimatePresence>
 
               {/* Join Button */}
-              <Button
-                fullWidth
-                onClick={handleJoin}
-                disabled={!name.trim() || !code.trim() || loading}
-                isLoading={loading}
-                size="lg"
-                className="bg-gradient-to-r from-teal-500 to-cyan-600 hover:from-teal-600 hover:to-cyan-700 shadow-xl shadow-teal-500/30 text-base font-bold py-3"
-              >
-                {!loading && <LogIn className="w-5 h-5 mr-2" />}
-                {loading ? 'Entrando...' : 'Entrar a la Sala'}
-              </Button>
-            </div>
+                <Button
+                  type="submit"
+                  fullWidth
+                  disabled={!name.trim() || !code.trim() || loading}
+                  isLoading={loading}
+                  size="lg"
+                  className="bg-gradient-to-r from-teal-500 to-cyan-600 hover:from-teal-600 hover:to-cyan-700 shadow-xl shadow-teal-500/30 text-base font-bold py-3"
+                >
+                  {!loading && <LogIn className="w-5 h-5 mr-2" />}
+                  {loading ? 'Entrando...' : 'Entrar a la Sala'}
+                </Button>
+              </div>
+            </form>
           </Card>
         </motion.div>
 

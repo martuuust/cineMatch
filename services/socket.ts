@@ -5,7 +5,7 @@
 
 import { io, Socket } from 'socket.io-client';
 
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:3001';
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || '/';
 
 // Socket event types
 export interface UserPublicInfo {
@@ -81,7 +81,9 @@ class SocketService {
 
         this.socket = io(SOCKET_URL, {
             withCredentials: true,
-            transports: ['websocket', 'polling']
+            transports: ['websocket'],
+            reconnectionAttempts: 5,
+            reconnectionDelay: 1000,
         });
 
         this.setupEventListeners();
@@ -155,6 +157,26 @@ class SocketService {
      */
     emitVote(roomCode: string, userId: string, movieId: number, voteType: 'yes' | 'no'): void {
         this.socket?.emit('vote', { roomCode, userId, movieId, voteType });
+    }
+
+    /**
+     * Emit leave-room event
+     */
+    emitLeaveRoom(roomCode: string, userId: string): Promise<void> {
+        return new Promise((resolve) => {
+            if (!this.socket?.connected) {
+                resolve();
+                return;
+            }
+            
+            // Timeout in case server doesn't respond
+            const timeout = setTimeout(() => resolve(), 1000);
+            
+            this.socket.emit('leave-room', { roomCode, userId }, () => {
+                clearTimeout(timeout);
+                resolve();
+            });
+        });
     }
 
     /**
