@@ -16,7 +16,7 @@ interface AppContextType {
   createRoom: (userName: string, genreIds?: number[]) => Promise<{ room: Room; user: User }>;
   joinRoom: (roomCode: string, userName: string) => Promise<{ room: Room; user: User }>;
   leaveRoom: () => Promise<void>;
-  startVoting: () => void;
+  startVoting: (roomCode?: string, userId?: string | number) => void;
   submitVote: (movieId: number, vote: 'yes' | 'no') => void;
   votes: Record<number, number>;
   matchResult: MatchingCompletePayload | null;
@@ -24,6 +24,7 @@ interface AppContextType {
   isInitializing: boolean;
   error: string | null;
   refreshRoom: () => Promise<void>;
+  forceFinishVoting: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -44,12 +45,15 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   // Helper to setup room state and socket connection
   const initializeRoomSession = useCallback((roomDetails: any, userId: number, initialMovies?: Movie[]) => {
     // Identify current user
-    const user = roomDetails.users.find((u: any) => u.id === userId) || {
+    const userData = roomDetails.users.find((u: any) => u.id === userId);
+
+    // Construct user object carefully to ensure isHost is preserved
+    const user = {
       id: userId,
-      name: 'User', // Fallback name
-      isHost: false,
-      progress: 0,
-      hasFinished: false
+      name: userData ? userData.name : 'User',
+      isHost: userData ? userData.isHost : false, // CRITICAL: Explicitly take isHost from server data
+      progress: userData ? userData.progress : 0,
+      hasFinished: userData ? userData.hasFinished : false
     };
 
     // Map room data
@@ -167,7 +171,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
         console.log('Restoring session for room:', roomCode);
         const roomDetails = await api.getRoom(roomCode);
-        
+
         // Verify user exists in room
         const userExists = roomDetails.users.some((u: any) => u.id === userId);
         if (!userExists) {
@@ -182,11 +186,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         console.error('Failed to restore session:', err);
         // Do NOT clear session immediately if it's a temporary network error
         if (err instanceof Error && (err.message.includes('tiempo') || err.message.includes('Gateway'))) {
-           setError('Error de conexión al restaurar sesión. Recarga la página.');
-           // Keep session in localStorage so they can try again by reloading
+          setError('Error de conexión al restaurar sesión. Recarga la página.');
+          // Keep session in localStorage so they can try again by reloading
         } else {
-           // If 404 or other permanent error, clear session
-           localStorage.removeItem(SESSION_KEY);
+          // If 404 or other permanent error, clear session
+          localStorage.removeItem(SESSION_KEY);
         }
       } finally {
         setIsInitializing(false);
@@ -285,15 +289,15 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           progress: u.progress,
           hasFinished: u.hasFinished
         }));
-        
+
         // Only update if something changed to avoid re-renders (simple check)
         if (JSON.stringify(prev.users) !== JSON.stringify(mappedUsers) || prev.status !== roomDetails.status) {
-             return { 
-                ...prev, 
-                users: mappedUsers,
-                status: roomDetails.status,
-                movieIds: roomDetails.movieIds 
-             };
+          return {
+            ...prev,
+            users: mappedUsers,
+            status: roomDetails.status,
+            movieIds: roomDetails.movieIds
+          };
         }
         return prev;
       });
@@ -344,7 +348,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     if (currentRoom && currentUser) {
       await socketService.emitLeaveRoom(currentRoom.code, currentUser.id);
     }
-    
+
     socketService.disconnect();
     setCurrentUser(null);
     setCurrentRoom(null);
@@ -355,9 +359,16 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     localStorage.removeItem(SESSION_KEY);
   }, [currentRoom, currentUser]);
 
-  const startVoting = useCallback(() => {
-    if (currentRoom && currentUser?.isHost) {
-      socketService.emitStartVoting(currentRoom.code, currentUser.id);
+  const startVoting = useCallback((roomCodeOverride?: string, userIdOverride?: string | number) => {
+    const code = roomCodeOverride || currentRoom?.code;
+    const uid = userIdOverride || currentUser?.id;
+
+    // We allow proceeding if we have the IDs, even if context local isHost check is skipped
+    // The backend will validate isHost anyway.
+    if (code && uid) {
+      socketService.emitStartVoting(code, uid);
+    } else {
+      console.warn("startVoting called but missing roomCode or userId", { code, uid });
     }
   }, [currentRoom, currentUser]);
 
@@ -370,6 +381,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     // Track local yes votes for display
     if (vote === 'yes') {
       setVotes(v => ({ ...v, [movieId]: (v[movieId] || 0) + 1 }));
+    }
+  }, [currentRoom, currentUser]);
+
+  const forceFinishVoting = useCallback(() => {
+    if (currentRoom && currentUser?.isHost) {
+      socketService.emitForceFinishVoting(currentRoom.code, currentUser.id);
     }
   }, [currentRoom, currentUser]);
 
@@ -397,7 +414,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         isConnected,
         isInitializing,
         error,
-        refreshRoom
+        refreshRoom,
+        forceFinishVoting
       }}
     >
       {children}

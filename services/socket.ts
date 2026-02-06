@@ -141,38 +141,38 @@ class SocketService {
     /**
      * Emit user-joined event
      */
-    emitUserJoined(roomCode: string, userId: string): void {
-        this.socket?.emit('user-joined', { roomCode, userId });
+    emitUserJoined(roomCode: string, userId: string | number): void {
+        this.socket?.emit('user-joined', { roomCode, userId: userId.toString() });
     }
 
     /**
      * Emit start-voting event (host only)
      */
-    emitStartVoting(roomCode: string, userId: string): void {
-        this.socket?.emit('start-voting', { roomCode, userId });
+    emitStartVoting(roomCode: string, userId: string | number): void {
+        this.socket?.emit('start-voting', { roomCode, userId: userId.toString() });
     }
 
     /**
      * Emit vote event
      */
-    emitVote(roomCode: string, userId: string, movieId: number, voteType: 'yes' | 'no'): void {
-        this.socket?.emit('vote', { roomCode, userId, movieId, voteType });
+    emitVote(roomCode: string, userId: string | number, movieId: number, voteType: 'yes' | 'no'): void {
+        this.socket?.emit('vote', { roomCode, userId: userId.toString(), movieId, voteType });
     }
 
     /**
      * Emit leave-room event
      */
-    emitLeaveRoom(roomCode: string, userId: string): Promise<void> {
+    emitLeaveRoom(roomCode: string, userId: string | number): Promise<void> {
         return new Promise((resolve) => {
             if (!this.socket?.connected) {
                 resolve();
                 return;
             }
-            
+
             // Timeout in case server doesn't respond
             const timeout = setTimeout(() => resolve(), 1000);
-            
-            this.socket.emit('leave-room', { roomCode, userId }, () => {
+
+            this.socket.emit('leave-room', { roomCode, userId: userId.toString() }, () => {
                 clearTimeout(timeout);
                 resolve();
             });
@@ -182,8 +182,8 @@ class SocketService {
     /**
      * Emit reconnect event
      */
-    emitReconnect(userId: string, roomCode: string): void {
-        this.socket?.emit('reconnect-user', { userId, roomCode });
+    emitReconnect(userId: string | number, roomCode: string): void {
+        this.socket?.emit('reconnect-user', { userId: userId.toString(), roomCode });
     }
 
     /**
@@ -191,6 +191,13 @@ class SocketService {
      */
     isConnected(): boolean {
         return this.socket?.connected ?? false;
+    }
+
+    /**
+     * Emit force-finish-voting event (host only)
+     */
+    emitForceFinishVoting(roomCode: string, userId: string | number): void {
+        this.socket?.emit('force-finish-voting', { roomCode, userId: userId.toString() });
     }
 
     /**

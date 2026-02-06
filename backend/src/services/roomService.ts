@@ -122,13 +122,14 @@ export class RoomService {
      * Start voting in a room
      */
     startVoting(roomCode: string, userId: string): void {
-        const room = dataStore.getRoomByCode(roomCode);
+        const room = dataStore.getRoomByCode(roomCode.toUpperCase());
         if (!room) {
             throw new AppError('Sala no encontrada', ErrorCode.ROOM_NOT_FOUND, 404);
         }
 
         // Verify user is host
-        if (room.hostId !== userId) {
+        // Use loose equality to handle potential string/number mismatches
+        if (room.hostId != userId) {
             throw new AppError('Solo el anfitrión puede iniciar la votación', ErrorCode.USER_NOT_HOST, 403);
         }
 
@@ -139,8 +140,8 @@ export class RoomService {
 
         // Check minimum users
         const users = dataStore.getUsersByRoom(room.id);
-        if (users.length < 2) {
-            throw new AppError('Se necesitan al menos 2 usuarios para empezar', ErrorCode.ROOM_NOT_READY);
+        if (users.length < 1) {
+            throw new AppError('Se necesitan al menos 1 usuario para empezar', ErrorCode.ROOM_NOT_READY);
         }
 
         // Update room status
@@ -175,18 +176,15 @@ export class RoomService {
      */
     haveAllUsersFinished(roomId: string): boolean {
         const users = dataStore.getUsersByRoom(roomId);
-        
+
         // If no users, return false
         if (users.length === 0) return false;
 
-        // Check if every user has either finished OR is disconnected
-        const allFinishedOrDisconnected = users.every(u => u.hasFinished || !u.socketId);
-        
-        // Also ensure at least one active user has finished to avoid premature closing 
-        // if everyone disconnects before starting
-        const atLeastOneFinished = users.some(u => u.hasFinished);
+        // Check if every user has strictly finished
+        // We do NOT count disconnected users as finished, effectively pausing the room until they reconnect
+        const allFinished = users.every(u => u.hasFinished);
 
-        return allFinishedOrDisconnected && atLeastOneFinished;
+        return allFinished;
     }
 
     /**

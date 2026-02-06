@@ -6,14 +6,14 @@ import { useAppContext } from '../context/AppContext';
 import Card from '../components/ui/Card';
 
 interface DraggableCardProps {
-    movie: any;
-    onVote: (vote: 'yes' | 'no') => void;
-    showInfo: boolean;
-    setShowInfo: (show: boolean) => void;
+  movie: any;
+  onVote: (vote: 'yes' | 'no') => void;
+  showInfo: boolean;
+  setShowInfo: (show: boolean) => void;
 }
 
 export interface DraggableCardRef {
-    swipe: (dir: 'left' | 'right') => Promise<void>;
+  swipe: (dir: 'left' | 'right') => Promise<void>;
 }
 
 const DraggableCard = forwardRef<DraggableCardRef, DraggableCardProps>(({ movie, onVote, showInfo, setShowInfo }, ref) => {
@@ -25,13 +25,13 @@ const DraggableCard = forwardRef<DraggableCardRef, DraggableCardProps>(({ movie,
 
   useImperativeHandle(ref, () => ({
     swipe: async (dir) => {
-        if (dir === 'right') {
-            await controls.start({ x: window.innerWidth + 200, rotate: 20, opacity: 0 });
-            onVote('yes');
-        } else {
-            await controls.start({ x: -window.innerWidth - 200, rotate: -20, opacity: 0 });
-            onVote('no');
-        }
+      if (dir === 'right') {
+        await controls.start({ x: window.innerWidth + 200, rotate: 20, opacity: 0 });
+        onVote('yes');
+      } else {
+        await controls.start({ x: -window.innerWidth - 200, rotate: -20, opacity: 0 });
+        onVote('no');
+      }
     }
   }));
 
@@ -68,105 +68,105 @@ const DraggableCard = forwardRef<DraggableCardRef, DraggableCardProps>(({ movie,
       initial={{ scale: 0.95, opacity: 0 }}
       animate={controls}
     >
-            {/* LIKE Indicator */}
+      {/* LIKE Indicator */}
+      <motion.div
+        className="absolute top-10 left-8 border-4 border-green-500 text-green-500 rounded-2xl px-6 py-3 text-4xl font-black uppercase tracking-widest rotate-[-15deg] z-50 bg-black/20 backdrop-blur-md shadow-xl shadow-green-500/20"
+        style={{ opacity: likeOpacity }}
+      >
+        LIKE
+      </motion.div>
+
+      {/* NOPE Indicator */}
+      <motion.div
+        className="absolute top-10 right-8 border-4 border-red-500 text-red-500 rounded-2xl px-6 py-3 text-4xl font-black uppercase tracking-widest rotate-[15deg] z-50 bg-black/20 backdrop-blur-md shadow-xl shadow-red-500/20"
+        style={{ opacity: nopeOpacity }}
+      >
+        NOPE
+      </motion.div>
+
+      {/* Main Card */}
+      <Card
+        noPadding
+        className="w-full h-full bg-slate-900 shadow-2xl rounded-[2rem] overflow-hidden flex flex-col relative border border-white/10 ring-1 ring-white/5"
+      >
+        {/* Movie Image */}
+        <div className="relative flex-1 bg-slate-900 overflow-hidden group">
+          <img
+            src={movie.posterPath}
+            alt={movie.title}
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+            draggable={false}
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent opacity-90" />
+
+          {/* Rating Badge */}
+          <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-md text-white px-3 py-1.5 rounded-full flex items-center gap-1.5 font-bold border border-white/10">
+            <Star className="w-4 h-4 fill-yellow-400 text-yellow-400 star-glow" />
+            <span>{movie.rating}</span>
+          </div>
+
+          {/* Info Button */}
+          <button
+            onClick={() => setShowInfo(!showInfo)}
+            className="absolute top-4 left-4 p-3 bg-black/60 backdrop-blur-md rounded-full text-white border border-white/10 hover:bg-white/20 transition-colors"
+          >
+            <Info className="w-5 h-5" />
+          </button>
+
+          {/* Movie Title Overlay */}
+          <div className="absolute bottom-0 left-0 right-0 p-8 text-white z-10">
+            <h2 className="text-4xl font-black leading-tight mb-4 drop-shadow-2xl tracking-tight">
+              {movie.title}
+            </h2>
+            <div className="flex flex-wrap items-center gap-3 text-sm font-bold">
+              <span className="px-3 py-1 bg-white/20 backdrop-blur-md rounded-lg border border-white/10 shadow-lg">
+                {movie.releaseYear}
+              </span>
+              <span className="px-3 py-1 bg-indigo-500/80 backdrop-blur-md rounded-lg border border-indigo-400/30 shadow-lg shadow-indigo-500/20">
+                {movie.genres.slice(0, 2).join(' / ')}
+              </span>
+              <span className="px-3 py-1 bg-white/10 backdrop-blur-md rounded-lg border border-white/10">
+                {Math.floor(movie.duration / 60)}h {movie.duration % 60}m
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Info Overlay */}
+        <AnimatePresence>
+          {showInfo && (
             <motion.div
-                className="absolute top-10 left-8 border-4 border-green-500 text-green-500 rounded-2xl px-6 py-3 text-4xl font-black uppercase tracking-widest rotate-[-15deg] z-50 bg-black/20 backdrop-blur-md shadow-xl shadow-green-500/20"
-                style={{ opacity: likeOpacity }}
+              className="absolute inset-0 bg-black/95 backdrop-blur-xl z-20 p-6 flex flex-col overflow-y-auto"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
             >
-                LIKE
-            </motion.div>
-
-            {/* NOPE Indicator */}
-            <motion.div
-                className="absolute top-10 right-8 border-4 border-red-500 text-red-500 rounded-2xl px-6 py-3 text-4xl font-black uppercase tracking-widest rotate-[15deg] z-50 bg-black/20 backdrop-blur-md shadow-xl shadow-red-500/20"
-                style={{ opacity: nopeOpacity }}
-            >
-                NOPE
-            </motion.div>
-
-            {/* Main Card */}
-            <Card
-                noPadding
-                className="w-full h-full bg-slate-900 shadow-2xl rounded-[2rem] overflow-hidden flex flex-col relative border border-white/10 ring-1 ring-white/5"
-            >
-                {/* Movie Image */}
-                <div className="relative flex-1 bg-slate-900 overflow-hidden group">
-                <img
-                    src={movie.posterPath}
-                    alt={movie.title}
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                    draggable={false}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent opacity-90" />
-
-            {/* Rating Badge */}
-            <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-md text-white px-3 py-1.5 rounded-full flex items-center gap-1.5 font-bold border border-white/10">
-                <Star className="w-4 h-4 fill-yellow-400 text-yellow-400 star-glow" />
-                <span>{movie.rating}</span>
-            </div>
-
-            {/* Info Button */}
-            <button
-                onClick={() => setShowInfo(!showInfo)}
-                className="absolute top-4 left-4 p-3 bg-black/60 backdrop-blur-md rounded-full text-white border border-white/10 hover:bg-white/20 transition-colors"
-            >
-                <Info className="w-5 h-5" />
-            </button>
-
-            {/* Movie Title Overlay */}
-            <div className="absolute bottom-0 left-0 right-0 p-8 text-white z-10">
-                <h2 className="text-4xl font-black leading-tight mb-4 drop-shadow-2xl tracking-tight">
-                {movie.title}
-                </h2>
-                <div className="flex flex-wrap items-center gap-3 text-sm font-bold">
-                    <span className="px-3 py-1 bg-white/20 backdrop-blur-md rounded-lg border border-white/10 shadow-lg">
-                        {movie.releaseYear}
-                    </span>
-                    <span className="px-3 py-1 bg-indigo-500/80 backdrop-blur-md rounded-lg border border-indigo-400/30 shadow-lg shadow-indigo-500/20">
-                        {movie.genres.slice(0, 2).join(' / ')}
-                    </span>
-                    <span className="px-3 py-1 bg-white/10 backdrop-blur-md rounded-lg border border-white/10">
-                        {Math.floor(movie.duration / 60)}h {movie.duration % 60}m
-                    </span>
-                </div>
-            </div>
-            </div>
-
-            {/* Info Overlay */}
-            <AnimatePresence>
-            {showInfo && (
-                <motion.div
-                className="absolute inset-0 bg-black/95 backdrop-blur-xl z-20 p-6 flex flex-col overflow-y-auto"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
+              <div className="flex justify-between items-start mb-4">
+                <h3 className="text-xl font-bold text-white">Sinopsis</h3>
+                <button
+                  onClick={() => setShowInfo(false)}
+                  className="p-2 hover:bg-white/10 rounded-full transition-colors"
                 >
-                <div className="flex justify-between items-start mb-4">
-                    <h3 className="text-xl font-bold text-white">Sinopsis</h3>
-                    <button
-                    onClick={() => setShowInfo(false)}
-                    className="p-2 hover:bg-white/10 rounded-full transition-colors"
-                    >
-                    <X className="w-6 h-6 text-slate-400" />
-                    </button>
+                  <X className="w-6 h-6 text-slate-400" />
+                </button>
+              </div>
+              <p className="text-slate-300 leading-relaxed mb-6">
+                {movie.overview}
+              </p>
+              <div className="mt-auto">
+                <h4 className="font-bold text-white mb-3">Géneros</h4>
+                <div className="flex flex-wrap gap-2">
+                  {movie.genres.map((g: string) => (
+                    <span key={g} className="px-4 py-2 bg-white/10 text-white rounded-full text-sm font-medium border border-white/10">
+                      {g}
+                    </span>
+                  ))}
                 </div>
-                <p className="text-slate-300 leading-relaxed mb-6">
-                    {movie.overview}
-                </p>
-                <div className="mt-auto">
-                    <h4 className="font-bold text-white mb-3">Géneros</h4>
-                    <div className="flex flex-wrap gap-2">
-                    {movie.genres.map((g: string) => (
-                        <span key={g} className="px-4 py-2 bg-white/10 text-white rounded-full text-sm font-medium border border-white/10">
-                        {g}
-                        </span>
-                    ))}
-                    </div>
-                </div>
-                </motion.div>
-            )}
-            </AnimatePresence>
-        </Card>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </Card>
     </motion.div>
   );
 });
@@ -175,18 +175,37 @@ DraggableCard.displayName = 'DraggableCard';
 
 const SwipePage: React.FC = () => {
   const navigate = useNavigate();
-  const { room, currentUser, movies, submitVote, userProgress } = useAppContext();
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const { room, currentUser, movies, submitVote, isInitializing, forceFinishVoting } = useAppContext();
+
+  // Calculate initial index based on user progress (approximate but robust)
+  // If user has progress 50%, they are at index: Math.floor(total * 0.5)
+  const initialIndex = React.useMemo(() => {
+    if (currentUser?.progress && movies.length > 0) {
+      const idx = Math.floor((currentUser.progress / 100) * movies.length);
+      // Ensure within bounds and not finished if progress < 100
+      return Math.min(idx, movies.length);
+    }
+    return 0;
+  }, [currentUser?.progress, movies.length]);
+
+  const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [showInfo, setShowInfo] = useState(false);
   const cardRef = useRef<DraggableCardRef>(null);
 
+  // Sync state if initialIndex changes significantly (e.g. on late data load)
   useEffect(() => {
-    if (userProgress && userProgress.hasFinished) {
-      if (room?.status === 'finished') {
+    if (initialIndex > currentIndex) {
+      setCurrentIndex(initialIndex);
+    }
+  }, [initialIndex]);
+
+  useEffect(() => {
+    if (currentUser?.hasFinished) {
+      if (room?.status === 'finished' || room?.status === 'completed') {
         navigate('/results');
       }
     }
-  }, [userProgress, room, navigate]);
+  }, [currentUser, room, navigate]);
 
   useEffect(() => {
     if (room?.status === 'finished' || room?.status === 'completed') {
@@ -203,11 +222,11 @@ const SwipePage: React.FC = () => {
     }
 
     const movieId = movies[currentIndex].id;
-    
+
     // Optimistic update
     setCurrentIndex(prev => prev + 1);
     setShowInfo(false);
-    
+
     // Submit vote in background
     submitVote(movieId, voteType).catch(err => {
       console.error('Vote submission failed:', err);
@@ -215,12 +234,12 @@ const SwipePage: React.FC = () => {
   };
 
   const handleButtonVote = (voteType: 'yes' | 'no') => {
-      if (cardRef.current) {
-          cardRef.current.swipe(voteType === 'yes' ? 'right' : 'left');
-      } else {
-          // Fallback if ref is not available
-          handleVote(voteType);
-      }
+    if (cardRef.current) {
+      cardRef.current.swipe(voteType === 'yes' ? 'right' : 'left');
+    } else {
+      // Fallback if ref is not available
+      handleVote(voteType);
+    }
   };
 
   // Loading state
@@ -242,7 +261,7 @@ const SwipePage: React.FC = () => {
   }
 
   // Finished voting state
-  if (currentIndex >= movies.length || (userProgress && userProgress.hasFinished)) {
+  if (currentIndex >= movies.length || currentUser?.hasFinished) {
     return (
       <div className="h-[100dvh] flex flex-col items-center justify-center p-6 text-center relative overflow-hidden">
         <div className="animated-bg">
@@ -295,13 +314,6 @@ const SwipePage: React.FC = () => {
                   <span className={u.id === currentUser.id ? 'text-indigo-400' : 'text-white'}>
                     {u.name} {u.id === currentUser.id && '(Tú)'}
                   </span>
-                  <span className="text-slate-400">
-                    {u.hasFinished ? (
-                      <span className="text-green-400">✓ Listo</span>
-                    ) : (
-                      `${Math.round(u.progress || 0)}%`
-                    )}
-                  </span>
                 </div>
                 <div className="h-2 bg-white/10 rounded-full overflow-hidden">
                   <motion.div
@@ -315,6 +327,30 @@ const SwipePage: React.FC = () => {
             ))}
           </div>
         </motion.div>
+
+        {/* Force Finish Button (Host Only) */}
+        {currentUser?.isHost && (
+          <motion.div
+            className="mt-6 w-full max-w-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.6 }}
+          >
+            <button
+              onClick={() => {
+                if (window.confirm('¿Seguro que quieres finalizar la votación? Se calcularán los resultados con los votos actuales.')) {
+                  forceFinishVoting();
+                }
+              }}
+              className="w-full py-4 rounded-xl border border-red-500/30 bg-red-500/10 text-red-400 font-bold hover:bg-red-500/20 transition-all text-sm uppercase tracking-wide flex items-center justify-center gap-2"
+            >
+              ⚠️ Forzar Finalizar Votación
+            </button>
+            <p className="text-[10px] text-slate-500 mt-2 text-center">
+              Usa esto si alguien se ha desconectado y no puede terminar.
+            </p>
+          </motion.div>
+        )}
       </div>
     );
   }
@@ -354,14 +390,14 @@ const SwipePage: React.FC = () => {
       {/* Card Container */}
       <div className="flex-1 px-4 pb-4 flex flex-col justify-center items-center min-h-0 relative z-10">
         <AnimatePresence mode="wait">
-            <DraggableCard 
-                key={currentMovie.id}
-                ref={cardRef}
-                movie={currentMovie}
-                onVote={handleVote}
-                showInfo={showInfo}
-                setShowInfo={setShowInfo}
-            />
+          <DraggableCard
+            key={currentMovie.id}
+            ref={cardRef}
+            movie={currentMovie}
+            onVote={handleVote}
+            showInfo={showInfo}
+            setShowInfo={setShowInfo}
+          />
         </AnimatePresence>
       </div>
 

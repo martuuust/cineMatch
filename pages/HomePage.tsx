@@ -48,14 +48,14 @@ const HomePage: React.FC = () => {
       </div>
 
       {/* Main Content */}
-      <motion.div 
+      <motion.div
         className="z-10 flex flex-col items-center"
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
       >
         {/* Logo */}
-        <motion.div 
+        <motion.div
           className="relative mb-6 md:mb-8"
           initial={{ scale: 0.5, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -71,7 +71,7 @@ const HomePage: React.FC = () => {
         </motion.div>
 
         {/* Title */}
-        <motion.h1 
+        <motion.h1
           className="text-5xl md:text-7xl font-black text-center mb-3 md:mb-4 tracking-tighter drop-shadow-2xl"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -82,7 +82,7 @@ const HomePage: React.FC = () => {
         </motion.h1>
 
         {/* Tagline */}
-        <motion.p 
+        <motion.p
           className="text-slate-400 text-center max-w-xs text-lg font-light leading-relaxed mb-8"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -94,7 +94,7 @@ const HomePage: React.FC = () => {
         </motion.p>
 
         {/* Features */}
-        <motion.div 
+        <motion.div
           className="flex gap-4 mb-10"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -114,7 +114,7 @@ const HomePage: React.FC = () => {
         </motion.div>
 
         {/* Buttons */}
-        <motion.div 
+        <motion.div
           className="w-full max-w-sm flex flex-col gap-4"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -122,45 +122,45 @@ const HomePage: React.FC = () => {
         >
           {/* Rejoin Active Session */}
           {currentRoom && !isInitializing && (
-             <motion.div
-               initial={{ opacity: 0, scale: 0.95 }}
-               animate={{ opacity: 1, scale: 1 }}
-               className="w-full"
-             >
-                <Button 
-                  fullWidth 
-                  size="lg" 
-                  onClick={() => navigate('/waiting-room', { 
-                    state: { 
-                      room: currentRoom, 
-                      user: currentUser 
-                    } 
-                  })}
-                  className="bg-emerald-600/80 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/20 border-l-4 border-emerald-400"
-                >
-                  <div className="flex flex-col items-start">
-                    <span className="text-xs uppercase tracking-wider font-bold opacity-80">Continuar sesión</span>
-                    <span className="flex items-center gap-2">
-                       Volver a Sala {currentRoom.code} <Zap className="w-4 h-4" />
-                    </span>
-                  </div>
-                </Button>
-             </motion.div>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="w-full"
+            >
+              <Button
+                fullWidth
+                size="lg"
+                onClick={() => navigate('/waiting', {
+                  state: {
+                    room: currentRoom,
+                    user: currentUser
+                  }
+                })}
+                className="bg-emerald-600/80 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/20 border-l-4 border-emerald-400"
+              >
+                <div className="flex flex-col items-start">
+                  <span className="text-xs uppercase tracking-wider font-bold opacity-80">Continuar sesión</span>
+                  <span className="flex items-center gap-2">
+                    Volver a Sala {currentRoom.code} <Zap className="w-4 h-4" />
+                  </span>
+                </div>
+              </Button>
+            </motion.div>
           )}
 
-          <Button 
-            fullWidth 
-            size="lg" 
+          <Button
+            fullWidth
+            size="lg"
             onClick={() => { leaveRoom(); navigate('/create'); }}
             className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 shadow-lg shadow-indigo-500/30 btn-glow"
           >
             <Sparkles className="w-5 h-5 mr-2" />
             Crear Sala
           </Button>
-          <Button 
-            fullWidth 
-            variant="outline" 
-            size="lg" 
+          <Button
+            fullWidth
+            variant="outline"
+            size="lg"
             onClick={() => { leaveRoom(); navigate('/join'); }}
             className="border-white/20 text-white hover:bg-white/10 hover:border-white/30 backdrop-blur-sm"
           >
@@ -169,9 +169,9 @@ const HomePage: React.FC = () => {
           </Button>
         </motion.div>
       </motion.div>
-      
+
       {/* Footer Badge */}
-      <motion.div 
+      <motion.div
         className="absolute bottom-8 text-xs text-slate-500 font-medium tracking-wide uppercase flex items-center gap-2"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
