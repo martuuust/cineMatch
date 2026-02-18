@@ -43,14 +43,15 @@ const io = new SocketServer(server, {
 setupSocketHandlers(io);
 
 // Start server
-server.listen(config.port, () => {
+const HOST = '0.0.0.0';
+server.listen(config.port, HOST, () => {
     console.log('');
     console.log('🎬 ═══════════════════════════════════════════════════════');
     console.log('   CineMatch Backend Server');
     console.log('═══════════════════════════════════════════════════════════');
     console.log(`   Environment: ${config.nodeEnv}`);
-    console.log(`   HTTP Server: http://localhost:${config.port}`);
-    console.log(`   Socket.io:   ws://localhost:${config.port}`);
+    console.log(`   Host:        ${HOST}`);
+    console.log(`   Port:        ${config.port}`);
     console.log(`   CORS Origin: ${config.corsOrigin}`);
     console.log('═══════════════════════════════════════════════════════════');
     console.log('');
