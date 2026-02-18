@@ -14,10 +14,16 @@ export function createApp(): Application {
     // CORS configuration
     app.use(cors({
         origin: (origin, callback) => {
-            // Allow requests with no origin (like mobile apps or curl requests)
+            // Allow requests with no origin
             if (!origin) return callback(null, true);
-            // Allow any origin in development/tunneling
-            callback(null, true);
+
+            // Allow specified origin(s) or all in development
+            const allowedOrigins = config.corsOrigin.split(',').map(o => o.trim());
+            if (config.nodeEnv === 'development' || allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
+                callback(null, true);
+            } else {
+                callback(new Error('Not allowed by CORS'));
+            }
         },
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
         allowedHeaders: ['Content-Type', 'Authorization'],

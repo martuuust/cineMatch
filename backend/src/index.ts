@@ -22,8 +22,14 @@ const io = new SocketServer(server, {
         origin: (origin, callback) => {
             // Allow requests with no origin
             if (!origin) return callback(null, true);
-            // Allow any origin
-            callback(null, true);
+
+            // Allow specified origin(s) or all in development
+            const allowedOrigins = config.corsOrigin.split(',').map(o => o.trim());
+            if (config.nodeEnv === 'development' || allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
+                callback(null, true);
+            } else {
+                callback(new Error('Not allowed by CORS'));
+            }
         },
         methods: ['GET', 'POST'],
         credentials: true

@@ -1,174 +1,98 @@
-# 🎬 CineMatch - Encuentra tu Película Perfecta
+# CineMatch 🎬🍿
 
-<div align="center">
-  <img src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" alt="CineMatch Banner" width="100%" />
-</div>
+CineMatch es una aplicación web en tiempo real diseñada para acabar con las discusiones sobre qué película ver. Permite a grupos de amigos o parejas unirse a una sala virtual, votar "Sí" o "No" a recomendaciones de películas y encontrar el "Match" perfecto cuando todos coinciden.
 
-## ✨ Descripción
+## 🏗️ Arquitectura del Proyecto
 
-**CineMatch** es una aplicación web que permite a grupos de amigos votar películas juntos usando un sistema tipo "swipe" (similar a Tinder). Cada usuario puede crear o unirse a una sala, votar películas haciendo swipe, y al final descubrir qué película fue votada positivamente por todos.
+El proyecto sigue una arquitectura cliente-servidor separada, pero contenida en un mismo repositorio para facilitar el desarrollo local. La comunicación principal es **bidireccional en tiempo real** mediante WebSockets.
 
-### 🚀 Características
+### 🟣 Frontend (Cliente)
+Ubicado en el directorio raíz.
+- **Tecnología Principal**: [React](https://react.dev/) v19 + [Vite](https://vitejs.dev/) v6.
+- **Lenguaje**: TypeScript.
+- **Comunicación**: `socket.io-client` para eventos en tiempo real (unirse a salas, votar, resultados).
+- **Enrutamiento**: `react-router-dom` para la navegación entre páginas (Home -> Crear Sala -> Sala de Espera -> Votación -> Resultados).
+- **Estilos**: Vanilla CSS con variables globales para un diseño moderno y oscuro ("Dark Mode").
+- **Animaciones**: `framer-motion` para transiciones suaves de tarjetas y efectos de UI.
+- **Iconos**: `lucide-react`.
 
-- 🎯 **Votación en tiempo real** - Swipe para votar películas
-- 👥 **Salas colaborativas** - Crea o únete a salas con código
-- 🎨 **Diseño Premium** - UI moderna con glassmorphism y animaciones fluidas
-- 📱 **Responsive** - Optimizado para móvil y desktop
-- 🎉 **Efectos visuales** - Confeti, partículas flotantes y transiciones
-- 🔄 **WebSocket** - Sincronización en tiempo real entre usuarios
-
----
-
-## 🛠️ Instalación y Ejecución
-
-### Requisitos Previos
-
-- **Node.js** v18 o superior
-- **npm** o **yarn**
-
-### Paso 1: Instalar Dependencias del Backend
-
-```bash
-cd cinematch/backend
-npm install
-```
-
-### Paso 2: Iniciar el Backend
-
-```bash
-cd cinematch/backend
-npm run dev
-```
-
-El servidor backend se ejecutará en `http://localhost:3001`
-
-### Paso 3: Instalar Dependencias del Frontend
-
-Abre una **nueva terminal** y ejecuta:
-
-```bash
-cd cinematch
-npm install
-```
-
-### Paso 4: Iniciar el Frontend
-
-```bash
-cd cinematch
-npm run dev
-```
-
-El frontend se ejecutará en `http://localhost:5173`
+### 🟢 Backend (Servidor)
+Ubicado en el directorio `/backend`.
+- **Tecnología Principal**: [Node.js](https://nodejs.org/) + [Express](https://expressjs.com/).
+- **Lenguaje**: TypeScript.
+- **Real-Time Engine**: `socket.io` server para gestionar salas, usuarios y sincronización de votos.
+- **Base de Datos**: almacenamiento **en memoria** (`DataStore`). No persiste datos al reiniciar el servidor (ideal para sesiones rápidas y efímeras).
+- **Hostería de API**: Se conecta con APIs externas (como TMDB - The Movie Database) para obtener información real de películas.
 
 ---
 
-## 🎮 Cómo Usar
+## 🚀 Cómo ejecutar el proyecto
 
-1. **Abre** `http://localhost:5173` en tu navegador
-2. **Crea una sala** haciendo clic en "Crear Sala"
-3. **Comparte el código** con tus amigos
-4. **Espera** a que se unan (mínimo 2 personas)
-5. **El anfitrión inicia** la votación
-6. **Haz swipe** a la derecha para "Me gusta" o izquierda para "No me gusta"
-7. **¡Descubre el match!** - La película que todos votaron positivamente
+### Opción Recomendada (Windows)
+Simplemente haz doble clic en el archivo `start-app.bat` ubicado en la raíz del proyecto.
+Este script abrirá automáticamente dos ventanas de terminal: una para el backend y otra para el frontend.
+
+### Opción Manual
+Si prefieres hacerlo manualmente o estás en otro sistema operativo:
+
+#### 1. Iniciar el Backend (Servidor)
+El backend debe estar corriendo primero.
+
+1. Abre una terminal y navega a la carpeta del backend:
+   ```bash
+   cd backend
+   ```
+2. Instala las dependencias (solo la primera vez):
+   ```bash
+   npm install
+   ```
+3. Inicia el servidor:
+   ```bash
+   npm run dev
+   ```
+
+#### 2. Iniciar el Frontend (Cliente)
+1. Abre **otra** terminal y navega a la raíz del proyecto:
+   ```bash
+   cd c:\Users\margosa\Desktop\Digitalizacion\cineMatch
+   ```
+2. Instala las dependencias (solo la primera vez):
+   ```bash
+   npm install
+   ```
+3. Inicia la aplicación web:
+   ```bash
+   npm run dev
+   ```
+4. Abre el navegador en `http://localhost:5173`.
 
 ---
 
-## 📁 Estructura del Proyecto
+## 🐳 Docker
+Actualmente el proyecto **no cuenta con contenedores Docker**.
+Para su despliegue o ejecución, se depende del entorno local de Node.js. Si se desea dockerizar en el futuro, se requeriría crear un `Dockerfile` para el frontend (build de producción con nginx/serve) y otro para el backend, orquestados mediante un `docker-compose.yml`.
+
+## 📂 Estructura de Carpetas
 
 ```
-cinematch/
-├── backend/                 # Servidor Node.js + Express + Socket.io
+cineMatch/
+├── backend/            # Servidor Node.js
 │   ├── src/
-│   │   ├── controllers/     # Controladores de API
-│   │   ├── routes/          # Rutas de Express
-│   │   ├── services/        # Lógica de negocio
-│   │   ├── socket/          # Manejadores de WebSocket
-│   │   └── index.ts         # Punto de entrada del servidor
-│   ├── .env                 # Variables de entorno
-│   └── package.json
-│
-├── components/              # Componentes React reutilizables
-│   └── ui/                  # Button, Input, Card, Avatar
-│
-├── context/                 # Estado global (React Context)
-│   └── AppContext.tsx
-│
-├── pages/                   # Páginas de la aplicación
-│   ├── HomePage.tsx         # Pantalla de inicio
-│   ├── CreateRoomPage.tsx   # Crear sala
-│   ├── JoinRoomPage.tsx     # Unirse a sala
-│   ├── WaitingRoomPage.tsx  # Sala de espera
-│   ├── SwipePage.tsx        # Votación (swipe)
-│   └── ResultsPage.tsx      # Resultados y match
-│
-├── services/                # Servicios de comunicación
-│   ├── api.ts               # Cliente HTTP REST
-│   └── socket.ts            # Cliente WebSocket
-│
-├── index.html               # HTML principal
-├── index.css                # Estilos globales
-├── index.tsx                # Punto de entrada React
-├── App.tsx                  # Router principal
-└── package.json
+│   │   ├── controllers/ # Controladores REST (opcional)
+│   │   ├── services/    # Lógica de negocio (Rooms, Users, Votes)
+│   │   ├── socket/      # Manejadores de eventos Socket.io
+│   │   ├── data/        # Almacenamiento en memoria
+│   │   └── ...
+├── components/         # Componentes React reutilizables
+├── context/            # Estado global (AppContext)
+├── pages/              # Vistas principales (CreateRoom, Voting, etc.)
+├── services/           # Servicios frontend (API clients)
+└── ...
 ```
 
 ---
 
-## 🎨 Tecnologías Utilizadas
-
-### Frontend
-- **React 19** - Biblioteca UI
-- **TypeScript** - Tipado estático
-- **Vite** - Build tool ultrarrápido
-- **Framer Motion** - Animaciones fluidas
-- **TailwindCSS** - Utilidades CSS
-- **Lucide React** - Iconos
-
-### Backend
-- **Node.js** - Runtime JavaScript
-- **Express** - Framework web
-- **Socket.io** - Comunicación en tiempo real
-- **TypeScript** - Tipado estático
-
----
-
-## 🔧 Configuración
-
-### Variables de Entorno del Backend (`backend/.env`)
-
-```env
-PORT=3001
-NODE_ENV=development
-CORS_ORIGIN=http://localhost:5173
-TMDB_API_KEY=tu_api_key_de_tmdb
-```
-
-### Variables de Entorno del Frontend (`.env.local`)
-
-```env
-VITE_API_URL=http://localhost:3001/api
-```
-
----
-
-## 📱 Comandos Rápidos
-
-```bash
-# Desarrollo completo (2 terminales)
-# Terminal 1 - Backend:
-cd cinematch/backend && npm run dev
-
-# Terminal 2 - Frontend:
-cd cinematch && npm run dev
-
-# Build de producción
-cd cinematch && npm run build
-cd cinematch/backend && npm run build
-```
-
----
-
-## 🎉 ¡Disfruta la app!
-
-Hecha con ❤️ para noches de películas con amigos.
+## ✨ Características Clave
+- **Sin Login persistente**: Los usuarios son anónimos por sesión.
+- **Sincronización total**: Si un usuario se desconecta o termina de votar, todos los demás ven el progreso en tiempo real.
+- **Algoritmo de Match**: La sala termina y anuncia el ganador en el momento exacto en que hay una coincidencia unánime o todos terminan de votar.
