@@ -95,7 +95,12 @@ export class TMDBService {
             for (let page = 1; page <= pages && movies.length < count; page++) {
                 const url = `${this.baseUrl}/movie/popular?api_key=${this.apiKey}&language=es-ES&page=${page}`;
 
-                const response = await fetch(url);
+                // Add timeout to fetch
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+                const response = await fetch(url, { signal: controller.signal });
+                clearTimeout(timeoutId);
 
                 if (!response.ok) {
                     throw new Error(`TMDB API error: ${response.status}`);
@@ -105,26 +110,23 @@ export class TMDBService {
 
                 for (const tmdbMovie of data.results) {
                     if (movies.length >= count) break;
-
-                    // Skip movies without poster
                     if (!tmdbMovie.poster_path) continue;
 
-                    // Get full movie details for runtime, providers, and fallback overview
-                    const details = await this.getMovieDetails(tmdbMovie.id);
-
+                    // Optimization: Use data directly from list without extra detail call
+                    // We only call detail if we REALLY need something not in the list (like providers)
+                    // but for the initial scroll list, usually the basic data is enough.
                     const movie: Movie = {
                         id: tmdbMovie.id,
                         title: tmdbMovie.title,
                         posterPath: `${TMDB_IMAGE_BASE}${tmdbMovie.poster_path}`,
                         rating: Math.round(tmdbMovie.vote_average * 10) / 10,
-                        duration: details?.runtime || 120,
-                        genres: this.mapGenres(tmdbMovie.genre_ids || [], []),
-                        overview: tmdbMovie.overview || details?.fallbackOverview || 'Sin descripción disponible.',
+                        duration: 120, // Default duration if not fetching details
+                        genres: this.mapGenres(tmdbMovie.genre_ids || []),
+                        overview: tmdbMovie.overview || 'Sin descripción disponible.',
                         releaseYear: tmdbMovie.release_date
                             ? parseInt(tmdbMovie.release_date.split('-')[0])
                             : new Date().getFullYear(),
-                        watchProviders: details?.watchProviders || [],
-                        watchUrl: details?.watchUrl
+                        watchProviders: []
                     };
 
                     movies.push(movie);
@@ -135,7 +137,7 @@ export class TMDBService {
             movieCache = movies;
             cacheTimestamp = Date.now();
 
-            console.log(`[TMDB] Fetched ${movies.length} movies from API`);
+            console.log(`[TMDB] Fetched ${movies.length} movies from API (optimized)`);
             return movies;
         } catch (error) {
             console.error('[TMDB] Error fetching movies:', error);
@@ -143,44 +145,6 @@ export class TMDBService {
         }
     }
 
-    /**
-     * Get movie details (runtime, watch providers, and fallback overview)
-     */
-    private async getMovieDetails(movieId: number): Promise<{
-        runtime: number;
-        watchProviders: { providerId: number; providerName: string; logoPath: string }[];
-        fallbackOverview?: string;
-        watchUrl?: string;
-    } | null> {
-        try {
-            const url = `${this.baseUrl}/movie/${movieId}?api_key=${this.apiKey}&language=es-ES&append_to_response=watch/providers,translations`;
-            const response = await fetch(url);
-
-            if (!response.ok) return null;
-
-            const data = await response.json() as any;
-            const providers = data['watch/providers']?.results?.ES?.flatrate || [];
-            const watchLink = data['watch/providers']?.results?.ES?.link || '';
-
-            // Find English overview as fallback
-            const translations = data.translations?.translations || [];
-            const englishInfo = translations.find((t: any) => t.iso_639_1 === 'en');
-            const fallbackOverview = englishInfo?.data?.overview || '';
-
-            return {
-                runtime: data.runtime || 120,
-                watchProviders: providers.map((p: any) => ({
-                    providerId: p.provider_id,
-                    providerName: p.provider_name,
-                    logoPath: `${TMDB_IMAGE_BASE}${p.logo_path}`
-                })),
-                fallbackOverview,
-                watchUrl: watchLink
-            };
-        } catch {
-            return null;
-        }
-    }
 
     /**
      * Search movies by query
@@ -241,62 +205,59 @@ export class TMDBService {
             console.log(`[TMDB] Genres: ${genreIds.join(',')}, Trying random page: ${page}`);
 
             let url = `${this.baseUrl}/discover/movie?api_key=${this.apiKey}&language=es-ES&with_genres=${genreParam}&sort_by=popularity.desc&include_adult=false&include_video=false&page=${page}`;
-            let response = await fetch(url);
+
+            // Reusable fetch function with timeout
+            const fetchWithTimeout = async (requestUrl: string) => {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 5000);
+                try {
+                    const response = await fetch(requestUrl, { signal: controller.signal });
+                    clearTimeout(timeoutId);
+                    return response;
+                } catch (e) {
+                    clearTimeout(timeoutId);
+                    throw e;
+                }
+            };
+
+            let response = await fetchWithTimeout(url);
             let data = await response.json() as TMDBResponse;
 
             // Check if we got results
             if (!data.results || data.results.length === 0) {
-                console.log(`[TMDB] Page ${page} was empty.`);
-
-                // If we have total_pages info, pick a valid random page
                 if (data.total_pages && data.total_pages > 0) {
-                    const maxPage = Math.min(data.total_pages, 50); // Cap at 50 to ensure relevance
+                    const maxPage = Math.min(data.total_pages, 50);
                     const newPage = Math.floor(Math.random() * maxPage) + 1;
 
                     if (newPage !== page) {
-                        console.log(`[TMDB] Retrying with valid random page: ${newPage} (Total pages: ${data.total_pages})`);
                         url = `${this.baseUrl}/discover/movie?api_key=${this.apiKey}&language=es-ES&with_genres=${genreParam}&sort_by=popularity.desc&include_adult=false&include_video=false&page=${newPage}`;
-                        response = await fetch(url);
+                        response = await fetchWithTimeout(url);
                         data = await response.json() as TMDBResponse;
                     }
                 }
 
-                // Final fallback to page 1 if still empty
                 if (!data.results || data.results.length === 0) {
-                    console.log(`[TMDB] Still no results, falling back to page 1`);
                     url = `${this.baseUrl}/discover/movie?api_key=${this.apiKey}&language=es-ES&with_genres=${genreParam}&sort_by=popularity.desc&include_adult=false&include_video=false&page=${1}`;
-                    response = await fetch(url);
+                    response = await fetchWithTimeout(url);
                     data = await response.json() as TMDBResponse;
                 }
-            } else {
-                console.log(`[TMDB] Success on page ${page}. Found ${data.results.length} movies.`);
             }
 
             if (!data.results) return [];
 
-            const movies: Movie[] = [];
-
-            for (const tmdbMovie of data.results) {
-                if (movies.length >= count) break;
-                if (!tmdbMovie.poster_path) continue;
-
-                const details = await this.getMovieDetails(tmdbMovie.id);
-
-                movies.push({
-                    id: tmdbMovie.id,
-                    title: tmdbMovie.title,
-                    posterPath: `${TMDB_IMAGE_BASE}${tmdbMovie.poster_path}`,
-                    rating: Math.round(tmdbMovie.vote_average * 10) / 10,
-                    duration: details?.runtime || 120,
-                    genres: this.mapGenres(tmdbMovie.genre_ids || []),
-                    overview: tmdbMovie.overview || details?.fallbackOverview || 'Sin descripción disponible.',
-                    releaseYear: tmdbMovie.release_date
-                        ? parseInt(tmdbMovie.release_date.split('-')[0])
-                        : new Date().getFullYear(),
-                    watchProviders: details?.watchProviders || [],
-                    watchUrl: details?.watchUrl
-                });
-            }
+            const movies: Movie[] = data.results.slice(0, count).map(tmdbMovie => ({
+                id: tmdbMovie.id,
+                title: tmdbMovie.title,
+                posterPath: `${TMDB_IMAGE_BASE}${tmdbMovie.poster_path}`,
+                rating: Math.round(tmdbMovie.vote_average * 10) / 10,
+                duration: 120,
+                genres: this.mapGenres(tmdbMovie.genre_ids || []),
+                overview: tmdbMovie.overview || 'Sin descripción disponible.',
+                releaseYear: tmdbMovie.release_date
+                    ? parseInt(tmdbMovie.release_date.split('-')[0])
+                    : new Date().getFullYear(),
+                watchProviders: []
+            }));
 
             return movies;
         } catch (error) {

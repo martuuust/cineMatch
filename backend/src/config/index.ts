@@ -7,15 +7,11 @@ import dotenv from 'dotenv';
 import path from 'path';
 
 // Load .env file
-const result = dotenv.config({ path: path.join(__dirname, '../../.env') });
+dotenv.config(); // Look in current directory first
+const envPath = path.join(process.cwd(), '.env');
+dotenv.config({ path: envPath });
 
-if (result.error) {
-    console.log('[Config] Error loading .env file:', result.error);
-    // Try default location
-    dotenv.config();
-} else {
-    console.log('[Config] Loaded .env file successfully');
-}
+console.log(`[Config] Running in ${process.env.NODE_ENV || 'development'} mode`);
 
 interface Config {
     port: number;

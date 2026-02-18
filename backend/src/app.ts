@@ -35,13 +35,11 @@ export function createApp(): Application {
     app.use(express.json({ limit: '10kb' }));
     app.use(express.urlencoded({ extended: true }));
 
-    // Request logging (development)
-    if (config.nodeEnv === 'development') {
-        app.use((req, _res, next) => {
-            console.log(`[HTTP] ${req.method} ${req.path}`);
-            next();
-        });
-    }
+    // Request logging
+    app.use((req, _res, next) => {
+        console.log(`[HTTP] ${req.method} ${req.path} - Origin: ${req.headers.origin || 'none'}`);
+        next();
+    });
 
     // API routes
     app.use('/api', routes);
