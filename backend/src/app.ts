@@ -11,7 +11,7 @@ export function createApp(): Application {
     const app = express();
 
     // 0. Emergency Debug Logger (TOP of stack)
-    app.use((req, res, next) => {
+    app.use((req, _res, next) => {
         console.log(`[DEBUG] ${req.method} ${req.url}`);
         console.log(`[DEBUG] Headers: ${JSON.stringify(req.headers)}`);
         next();
