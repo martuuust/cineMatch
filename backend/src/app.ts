@@ -20,7 +20,8 @@ export function createApp(): Application {
             // Allow specified origin(s) or all in development
             const allowedOrigins = config.corsOrigin.split(',').map(o => o.trim());
             if (config.nodeEnv === 'development' || allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
-                callback(null, true);
+                // Return the actual origin instead of true to allow credentials with '*'
+                callback(null, origin);
             } else {
                 callback(new Error('Not allowed by CORS'));
             }
