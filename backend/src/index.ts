@@ -20,17 +20,9 @@ const server = http.createServer(app);
 const io = new SocketServer(server, {
     cors: {
         origin: (origin, callback) => {
-            // Allow requests with no origin
+            // Allow any origin and reflect it back for credentials support
             if (!origin) return callback(null, true);
-
-            // Allow specified origin(s) or all in development
-            const allowedOrigins = config.corsOrigin.split(',').map(o => o.trim());
-            if (config.nodeEnv === 'development' || allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
-                // Return the actual origin instead of true to allow credentials with '*'
-                callback(null, origin);
-            } else {
-                callback(new Error('Not allowed by CORS'));
-            }
+            callback(null, origin);
         },
         methods: ['GET', 'POST'],
         credentials: true

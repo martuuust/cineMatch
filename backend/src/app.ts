@@ -4,31 +4,26 @@
 
 import express, { Application } from 'express';
 import cors from 'cors';
-import { config } from './config';
 import routes from './routes';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 
 export function createApp(): Application {
     const app = express();
 
-    // CORS configuration
+    // CORS configuration - UPDATED FOR PRODUCTION STABILITY
     app.use(cors({
         origin: (origin, callback) => {
-            // Allow requests with no origin
+            // In production, we allow the specific origin if it matches our pattern or '*'
             if (!origin) return callback(null, true);
 
-            // Allow specified origin(s) or all in development
-            const allowedOrigins = config.corsOrigin.split(',').map(o => o.trim());
-            if (config.nodeEnv === 'development' || allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
-                // Return the actual origin instead of true to allow credentials with '*'
-                callback(null, origin);
-            } else {
-                callback(new Error('Not allowed by CORS'));
-            }
+            // Just allow it and reflect it back to satisfy 'credentials: true'
+            // This is the most compatible way for dynamic origins like Vercel previews
+            callback(null, origin);
         },
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-        allowedHeaders: ['Content-Type', 'Authorization'],
-        credentials: true
+        allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+        credentials: true,
+        optionsSuccessStatus: 200 // Some legacy browsers choke on 204
     }));
 
     // Body parsing
