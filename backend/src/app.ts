@@ -10,47 +10,40 @@ import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 export function createApp(): Application {
     const app = express();
 
+    // 0. Emergency Debug Logger (TOP of stack)
+    app.use((req, res, next) => {
+        console.log(`[DEBUG] ${req.method} ${req.url}`);
+        console.log(`[DEBUG] Headers: ${JSON.stringify(req.headers)}`);
+        next();
+    });
+
     // CORS configuration - UPDATED FOR PRODUCTION STABILITY
     app.use(cors({
-        origin: (origin, callback) => {
-            // In production, we allow the specific origin if it matches our pattern or '*'
-            if (!origin) return callback(null, true);
-
-            // Just allow it and reflect it back to satisfy 'credentials: true'
-            // This is the most compatible way for dynamic origins like Vercel previews
-            callback(null, origin);
-        },
+        origin: true, // Reflect any origin
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
         allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
         credentials: true,
-        optionsSuccessStatus: 200 // Some legacy browsers choke on 204
+        optionsSuccessStatus: 200
     }));
 
     // Body parsing
     app.use(express.json({ limit: '10kb' }));
     app.use(express.urlencoded({ extended: true }));
 
-    // Request logging
-    app.use((req, _res, next) => {
-        console.log(`[HTTP] ${req.method} ${req.path} - Origin: ${req.headers.origin || 'none'}`);
-        next();
-    });
-
     // API routes
     app.use('/api', routes);
+
+    // Ultra-basic test route
+    app.get('/ping', (_req, res) => {
+        res.send('pong');
+    });
 
     // Root endpoint
     app.get('/', (_req, res) => {
         res.json({
-            name: 'CineMatch API',
-            version: '1.0.0',
-            status: 'running',
-            endpoints: {
-                health: '/api/health',
-                createRoom: 'POST /api/rooms/create',
-                joinRoom: 'POST /api/rooms/join',
-                getMovies: 'GET /api/movies/batch'
-            }
+            status: 'online',
+            service: 'CineMatch API',
+            timestamp: new Date().toISOString()
         });
     });
 
