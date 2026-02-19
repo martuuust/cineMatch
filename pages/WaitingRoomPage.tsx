@@ -95,11 +95,45 @@ const WaitingRoomPage: React.FC = () => {
     }
   }, [room?.status, navigate]);
 
-  const handleCopyCode = () => {
+  const handleCopyCode = async () => {
     if (room?.code) {
-      navigator.clipboard.writeText(room.code);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(room.code);
+          setCopied(true);
+        } else {
+          // Fallback for insecure contexts or older browsers
+          const textArea = document.createElement("textarea");
+          textArea.value = room.code;
+
+          // Ensure it's not visible but part of the DOM
+          textArea.style.position = "fixed";
+          textArea.style.left = "-9999px";
+          textArea.style.top = "0";
+          document.body.appendChild(textArea);
+
+          textArea.focus();
+          textArea.select();
+
+          try {
+            const successful = document.execCommand('copy');
+            if (successful) setCopied(true);
+          } catch (err) {
+            console.error('Fallback copy failed', err);
+            // Last resort: prompt user
+            prompt("Copia este código:", room.code);
+          }
+
+          document.body.removeChild(textArea);
+        }
+
+        if (setCopied) {
+          setTimeout(() => setCopied(false), 2000);
+        }
+      } catch (err) {
+        console.error('Copy failed', err);
+        prompt("Copia este código:", room.code);
+      }
     }
   };
 

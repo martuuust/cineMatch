@@ -29,6 +29,7 @@ interface TMDBResponse {
 // TMDBGenre interface available for future genre endpoint integration
 
 // Genre ID to name mapping (cached)
+// Genre ID to name mapping (cached)
 const GENRE_MAP: Record<number, string> = {
     28: 'Acción',
     12: 'Aventura',
@@ -50,6 +51,12 @@ const GENRE_MAP: Record<number, string> = {
     10752: 'Guerra',
     37: 'Western'
 };
+
+interface TMDBProvider {
+    provider_id: number;
+    provider_name: string;
+    logo_path: string;
+}
 
 // Cache for movies to avoid repeated API calls
 let movieCache: Movie[] | null = null;
@@ -133,6 +140,12 @@ export class TMDBService {
                 }
             }
 
+
+            // Enrich with watch providers (parallel)
+            await Promise.all(movies.map(async m => {
+                m.watchProviders = await this.getWatchProviders(m.id);
+            }));
+
             // Update cache
             movieCache = movies;
             cacheTimestamp = Date.now();
@@ -165,7 +178,7 @@ export class TMDBService {
 
             const data = await response.json() as TMDBResponse;
 
-            return data.results
+            const mappedMovies: Movie[] = data.results
                 .filter(m => m.poster_path)
                 .slice(0, count)
                 .map(m => ({
@@ -178,8 +191,16 @@ export class TMDBService {
                     overview: m.overview || 'Sin descripción disponible.',
                     releaseYear: m.release_date
                         ? parseInt(m.release_date.split('-')[0])
-                        : new Date().getFullYear()
+                        : new Date().getFullYear(),
+                    watchProviders: []
                 }));
+
+            // Enrich with providers
+            await Promise.all(mappedMovies.map(async m => {
+                m.watchProviders = await this.getWatchProviders(m.id);
+            }));
+
+            return mappedMovies;
         } catch (error) {
             console.error('[TMDB] Error searching movies:', error);
             return [];
@@ -259,6 +280,11 @@ export class TMDBService {
                 watchProviders: []
             }));
 
+            // Enrich with providers
+            await Promise.all(movies.map(async m => {
+                m.watchProviders = await this.getWatchProviders(m.id);
+            }));
+
             return movies;
         } catch (error) {
             console.error('[TMDB] Error fetching movies by genre:', error);
@@ -294,6 +320,39 @@ export class TMDBService {
     clearCache(): void {
         movieCache = null;
         cacheTimestamp = 0;
+    }
+
+    /**
+     * Get watch providers for a movie
+     */
+    async getWatchProviders(movieId: number): Promise<{ providerId: number; providerName: string; logoPath: string }[]> {
+        if (!this.isConfigured()) return [];
+
+        try {
+            const url = `${this.baseUrl}/movie/${movieId}/watch/providers?api_key=${this.apiKey}`;
+            const response = await fetch(url);
+
+            if (!response.ok) return [];
+
+            const data = await response.json() as any;
+            const results = data.results;
+
+            if (!results) return [];
+
+            // Prioritize ES (Spain), fallback to US or plain flatrate
+            const locale = results.ES || results.US || results.LATAM;
+
+            if (!locale || !locale.flatrate) return [];
+
+            return locale.flatrate.map((p: TMDBProvider) => ({
+                providerId: p.provider_id,
+                providerName: p.provider_name,
+                logoPath: `${TMDB_IMAGE_BASE}${p.logo_path}`
+            }));
+        } catch (error) {
+            console.error(`[TMDB] Error fetching providers for movie ${movieId}:`, error);
+            return [];
+        }
     }
 }
 

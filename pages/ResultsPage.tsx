@@ -60,10 +60,13 @@ const ResultsPage: React.FC = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  if (!room) {
-    navigate('/');
-    return null;
-  }
+  useEffect(() => {
+    if (!room) {
+      navigate('/');
+    }
+  }, [room, navigate]);
+
+  if (!room) return null;
 
   // Unified Results Logic
   const getResults = () => {
