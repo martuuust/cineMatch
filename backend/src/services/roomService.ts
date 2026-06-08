@@ -13,7 +13,6 @@ export class RoomService {
      * Create a new room with a host user
      */
     async createRoom(hostName: string, genreIds?: number[]): Promise<{ room: Room; user: User }> {
-        // Validate input
         if (!hostName || hostName.trim().length === 0) {
             throw new AppError('El nombre de usuario es obligatorio', ErrorCode.VALIDATION_ERROR);
         }
@@ -22,7 +21,6 @@ export class RoomService {
             throw new AppError('El nombre debe tener 50 caracteres o menos', ErrorCode.VALIDATION_ERROR);
         }
 
-        // Get movies from vote service (ensures consistency with frontend)
         let movies: import('../types').Movie[];
 
         if (genreIds && genreIds.length > 0) {
@@ -33,16 +31,11 @@ export class RoomService {
 
         const movieIds = movies.map(m => m.id);
 
-        // Create host user first (without roomId, will update after room creation)
-        const tempUser = dataStore.createUser(hostName.trim(), '', true);
+        const tempUser = await dataStore.createUser(hostName.trim(), '', true);
+        const room = await dataStore.createRoom(tempUser.id, movieIds);
+        await dataStore.assignUserToRoom(tempUser.id, room.id);
 
-        // Create room with host
-        const room = dataStore.createRoom(tempUser.id, movieIds);
-
-        // Update user with room ID and add to room
-        const user = dataStore.getUserById(tempUser.id)!;
-        user.roomId = room.id;
-        dataStore['usersByRoom'].get(room.id)?.add(user.id);
+        const user = (await dataStore.getUserById(tempUser.id))!;
 
         return { room, user };
     }
@@ -50,8 +43,7 @@ export class RoomService {
     /**
      * Join an existing room
      */
-    joinRoom(roomCode: string, userName: string): { room: Room; user: User } {
-        // Validate input
+    async joinRoom(roomCode: string, userName: string): Promise<{ room: Room; user: User }> {
         if (!roomCode || roomCode.trim().length === 0) {
             throw new AppError('El código de sala es obligatorio', ErrorCode.VALIDATION_ERROR);
         }
@@ -64,100 +56,70 @@ export class RoomService {
             throw new AppError('El nombre debe tener 50 caracteres o menos', ErrorCode.VALIDATION_ERROR);
         }
 
-        // Find room
-        const room = dataStore.getRoomByCode(roomCode.toUpperCase().trim());
+        const room = await dataStore.getRoomByCode(roomCode.toUpperCase().trim());
         if (!room) {
             throw new AppError('Sala no encontrada', ErrorCode.ROOM_NOT_FOUND, 404);
         }
 
-        // Check room status
         if (room.status !== RoomStatus.WAITING) {
             throw new AppError('La votación ya ha comenzado', ErrorCode.ROOM_ALREADY_STARTED);
         }
 
-        // Check room capacity (optional limit)
-        const existingUsers = dataStore.getUsersByRoom(room.id);
+        const existingUsers = await dataStore.getUsersByRoom(room.id);
         if (existingUsers.length >= 10) {
             throw new AppError('La sala está llena (máx 10 usuarios)', ErrorCode.ROOM_FULL);
         }
 
-        // Create user
-        const user = dataStore.createUser(userName.trim(), room.id, false);
+        const user = await dataStore.createUser(userName.trim(), room.id, false);
 
         return { room, user };
     }
 
-    /**
-     * Get room by code
-     */
-    getRoomByCode(code: string): Room | undefined {
+    async getRoomByCode(code: string): Promise<Room | undefined> {
         return dataStore.getRoomByCode(code);
     }
 
-    /**
-     * Get room by ID
-     */
-    getRoomById(id: string): Room | undefined {
+    async getRoomById(id: string): Promise<Room | undefined> {
         return dataStore.getRoomById(id);
     }
 
-    /**
-     * Get all users in a room (public info only)
-     */
-    getRoomUsers(roomId: string): UserPublicInfo[] {
-        const users = dataStore.getUsersByRoom(roomId);
+    async getRoomUsers(roomId: string): Promise<UserPublicInfo[]> {
+        const users = await dataStore.getUsersByRoom(roomId);
         return users.map(u => this.toPublicUserInfo(u));
     }
 
-    /**
-     * Get all users in a room by code
-     */
-    getRoomUsersByCode(roomCode: string): UserPublicInfo[] {
-        const room = dataStore.getRoomByCode(roomCode);
+    async getRoomUsersByCode(roomCode: string): Promise<UserPublicInfo[]> {
+        const room = await dataStore.getRoomByCode(roomCode);
         if (!room) return [];
         return this.getRoomUsers(room.id);
     }
 
-    /**
-     * Start voting in a room
-     */
-    startVoting(roomCode: string, userId: string): void {
-        const room = dataStore.getRoomByCode(roomCode.toUpperCase());
+    async startVoting(roomCode: string, userId: string): Promise<void> {
+        const room = await dataStore.getRoomByCode(roomCode.toUpperCase());
         if (!room) {
             throw new AppError('Sala no encontrada', ErrorCode.ROOM_NOT_FOUND, 404);
         }
 
-        // Verify user is host
-        // Use loose equality to handle potential string/number mismatches
         if (room.hostId != userId) {
             throw new AppError('Solo el anfitrión puede iniciar la votación', ErrorCode.USER_NOT_HOST, 403);
         }
 
-        // Check room status
         if (room.status !== RoomStatus.WAITING) {
             throw new AppError('La votación ya ha comenzado o terminado', ErrorCode.ROOM_ALREADY_STARTED);
         }
 
-        // Check minimum users
-        const users = dataStore.getUsersByRoom(room.id);
+        const users = await dataStore.getUsersByRoom(room.id);
         if (users.length < 1) {
             throw new AppError('Se necesitan al menos 1 usuario para empezar', ErrorCode.ROOM_NOT_READY);
         }
 
-        // Update room status
-        dataStore.updateRoomStatus(room.id, RoomStatus.VOTING);
+        await dataStore.updateRoomStatus(room.id, RoomStatus.VOTING);
     }
 
-    /**
-     * Get movie by ID (delegates to voteService)
-     */
     getMovieById(movieId: number): import('../types').Movie | undefined {
         return voteService.getMovieById(movieId);
     }
 
-    /**
-     * Convert User to public info (excludes sensitive data)
-     */
     toPublicUserInfo(user: User): UserPublicInfo {
         return {
             id: user.id,
@@ -168,33 +130,20 @@ export class RoomService {
         };
     }
 
-    /**
-     * Check if all users have finished voting
-     * Consider users finished if:
-     * 1. They explicitly finished voting (hasFinished = true)
-     * 2. OR they are disconnected (socketId = null) - to prevent blocking
-     */
-    haveAllUsersFinished(roomId: string): boolean {
-        const users = dataStore.getUsersByRoom(roomId);
+    async haveAllUsersFinished(roomId: string): Promise<boolean> {
+        const users = await dataStore.getUsersByRoom(roomId);
 
-        // If no users, return false
         if (users.length === 0) return false;
 
-        // Filter users who are currently connected
         const connectedUsers = users.filter(u => u.socketId !== null);
 
-        // If all registered users are disconnected, return false
         if (connectedUsers.length === 0) return false;
 
-        // Check if every connected user has finished
         return connectedUsers.every(u => u.hasFinished);
     }
 
-    /**
-     * Mark room as finished
-     */
-    finishRoom(roomId: string): void {
-        dataStore.updateRoomStatus(roomId, RoomStatus.FINISHED);
+    async finishRoom(roomId: string): Promise<void> {
+        await dataStore.updateRoomStatus(roomId, RoomStatus.FINISHED);
     }
 }
 

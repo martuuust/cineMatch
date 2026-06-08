@@ -21,7 +21,7 @@ Ubicado en el directorio `/backend`.
 - **Tecnología Principal**: [Node.js](https://nodejs.org/) + [Express](https://expressjs.com/).
 - **Lenguaje**: TypeScript.
 - **Real-Time Engine**: `socket.io` server para gestionar salas, usuarios y sincronización de votos.
-- **Base de Datos**: almacenamiento **en memoria** (`DataStore`). No persiste datos al reiniciar el servidor (ideal para sesiones rápidas y efímeras).
+- **Base de Datos**: **Redis** (`DataStore` async). Persiste salas y votos entre reinicios y permite escalar horizontalmente con `@socket.io/redis-adapter`.
 - **Hostería de API**: Se conecta con APIs externas (como TMDB - The Movie Database) para obtener información real de películas.
 
 ---

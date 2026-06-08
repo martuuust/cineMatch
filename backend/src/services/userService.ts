@@ -7,49 +7,31 @@ import { dataStore } from '../data/store';
 import { User, UserPublicInfo } from '../types';
 import { roomService } from './roomService';
 import { RoomStatus } from '../types';
-// Error utilities available if needed for future extensions
 
 export class UserService {
-    /**
-     * Get user by ID
-     */
-    getUserById(userId: string): User | undefined {
+    async getUserById(userId: string): Promise<User | undefined> {
         return dataStore.getUserById(userId);
     }
 
-    /**
-     * Get user by socket ID
-     */
-    getUserBySocketId(socketId: string): User | undefined {
+    async getUserBySocketId(socketId: string): Promise<User | undefined> {
         return dataStore.getUserBySocketId(socketId);
     }
 
-    /**
-     * Update user's socket connection
-     */
-    updateSocket(userId: string, socketId: string | null): boolean {
+    async updateSocket(userId: string, socketId: string | null): Promise<boolean> {
         return dataStore.updateUserSocket(userId, socketId);
     }
 
-    /**
-     * Handle user disconnection
-     */
-    handleDisconnect(socketId: string): { user: User; roomId: string; shouldFinish: boolean } | null {
-        const user = dataStore.getUserBySocketId(socketId);
+    async handleDisconnect(socketId: string): Promise<{ user: User; roomId: string; shouldFinish: boolean } | null> {
+        const user = await dataStore.getUserBySocketId(socketId);
         if (!user) return null;
 
-        // Only clear socket association, DO NOT remove user from room
-        // This allows users to reconnect/refresh without losing their spot
-        dataStore.updateUserSocket(user.id, null);
+        await dataStore.updateUserSocket(user.id, null);
 
-        // Check if room should finish now that this user is "gone" (inactive)
         let shouldFinish = false;
-        const room = dataStore.getRoomById(user.roomId);
+        const room = await dataStore.getRoomById(user.roomId);
 
         if (room && room.status === RoomStatus.VOTING) {
-            // Check if ALL remaining active users have finished
-            // This prevents the room from being blocked by the disconnected user
-            if (roomService.haveAllUsersFinished(room.id)) {
+            if (await roomService.haveAllUsersFinished(room.id)) {
                 shouldFinish = true;
             }
         }
@@ -57,20 +39,14 @@ export class UserService {
         return { user, roomId: user.roomId, shouldFinish };
     }
 
-    /**
-     * Reconnect user to socket
-     */
-    reconnect(userId: string, socketId: string): User | null {
-        const user = dataStore.getUserById(userId);
+    async reconnect(userId: string, socketId: string): Promise<User | null> {
+        const user = await dataStore.getUserById(userId);
         if (!user) return null;
 
-        dataStore.updateUserSocket(userId, socketId);
+        await dataStore.updateUserSocket(userId, socketId);
         return user;
     }
 
-    /**
-     * Convert User to public info
-     */
     toPublicInfo(user: User): UserPublicInfo {
         return {
             id: user.id,
@@ -81,18 +57,12 @@ export class UserService {
         };
     }
 
-    /**
-     * Remove user from room (leave)
-     */
-    removeUser(userId: string): boolean {
+    async removeUser(userId: string): Promise<boolean> {
         return dataStore.deleteUser(userId);
     }
 
-    /**
-     * Check if user is host of their room
-     */
-    isHost(userId: string): boolean {
-        const user = dataStore.getUserById(userId);
+    async isHost(userId: string): Promise<boolean> {
+        const user = await dataStore.getUserById(userId);
         return user?.isHost ?? false;
     }
 }

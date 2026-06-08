@@ -2,18 +2,21 @@
  * CineMatch Backend - Express Integration Tests
  */
 
-// Set up frontend URL environment variable before imports to configure config module
 process.env.FRONTEND_URL = 'https://app.cinematch.com';
-process.env.PORT = '3002'; // Avoid port conflicts
+process.env.PORT = '3002';
+process.env.NODE_ENV = 'test';
 
 import request from 'supertest';
-import { Application } from 'express';
-import { createApp } from './app';
+import type { Application } from 'express';
 
 describe('Express Application Hardening & Integration', () => {
     let app: Application;
 
-    beforeAll(() => {
+    beforeAll(async () => {
+        jest.resetModules();
+        const { connectRedis } = await import('./config/redis');
+        const { createApp } = await import('./app');
+        await connectRedis();
         app = createApp();
     });
 
@@ -67,6 +70,7 @@ describe('Express Application Hardening & Integration', () => {
     describe('Request Rate Limiting - SEC-3.1, SEC-3.2', () => {
         it('should allow requests within rate limit but block the 101st request', async () => {
             // Get a completely fresh app instance to isolate the rate limiter memory
+            const { createApp } = await import('./app');
             const freshApp = createApp();
 
             // Send 100 requests (99 in loop + 1 for assertion)

@@ -69,8 +69,8 @@ export class RoomController {
             const { roomCode, userName } = req.body;
 
             // Join room
-            const { room, user } = roomService.joinRoom(roomCode, userName);
-            const users = roomService.getRoomUsers(room.id);
+            const { room, user } = await roomService.joinRoom(roomCode, userName);
+            const users = await roomService.getRoomUsers(room.id);
 
             // Get movies for the room
             const movies = room.movieIds
@@ -98,7 +98,7 @@ export class RoomController {
         try {
             const { code } = req.params;
 
-            const users = roomService.getRoomUsersByCode(code);
+            const users = await roomService.getRoomUsersByCode(code);
 
             res.status(200).json({ users });
         } catch (error) {
@@ -114,12 +114,12 @@ export class RoomController {
         try {
             const { code } = req.params;
 
-            const room = roomService.getRoomByCode(code);
+            const room = await roomService.getRoomByCode(code);
             if (!room) {
                 throw new AppError('Room not found', ErrorCode.ROOM_NOT_FOUND, 404);
             }
 
-            const users = roomService.getRoomUsers(room.id);
+            const users = await roomService.getRoomUsers(room.id);
 
             // Get movies for the room
             const movies = room.movieIds

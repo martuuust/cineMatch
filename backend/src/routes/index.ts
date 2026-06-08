@@ -15,8 +15,8 @@ router.use('/rooms', roomRoutes);
 router.use('/movies', movieRoutes);
 
 // Health check
-router.get('/health', (_req, res) => {
-    const stats = dataStore.getRoomStats();
+router.get('/health', async (_req, res) => {
+    const stats = await dataStore.getRoomStats();
     res.status(200).json({
         status: 'ok',
         timestamp: new Date().toISOString(),

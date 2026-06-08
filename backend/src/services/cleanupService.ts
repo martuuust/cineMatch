@@ -9,8 +9,8 @@ import { RoomStatus } from '../types';
 /**
  * Executes the eviction check once
  */
-export function cleanupRooms(): { evictedCount: number } {
-    const rooms = dataStore.getAllRooms();
+export async function cleanupRooms(): Promise<{ evictedCount: number }> {
+    const rooms = await dataStore.getAllRooms();
     const now = new Date();
     let evictedCount = 0;
 
@@ -33,7 +33,7 @@ export function cleanupRooms(): { evictedCount: number } {
             }
 
             if (shouldEvict) {
-                dataStore.deleteRoom(room.id);
+                await dataStore.deleteRoom(room.id);
                 evictedCount++;
                 console.log(`[Cleanup] Evicted room ${room.id} (${room.code}) - Status: ${room.status}, Inactive for: ${Math.round(timeSinceActive / 1000 / 60)}m`);
             }
@@ -57,20 +57,15 @@ export function startCleanupService(intervalMs: number = 10 * 60 * 1000): void {
     }
 
     console.log(`[Cleanup] Starting periodic room cleanup service (every ${intervalMs / 1000 / 60} minutes)`);
-    
-    // Execute immediately on startup to clean up any initial stale state
-    try {
-        cleanupRooms();
-    } catch (error) {
+
+    void cleanupRooms().catch(error => {
         console.error('[Cleanup] Initial execution failed:', error);
-    }
+    });
 
     cleanupIntervalId = setInterval(() => {
-        try {
-            cleanupRooms();
-        } catch (error) {
+        void cleanupRooms().catch(error => {
             console.error('[Cleanup] Execution failed:', error);
-        }
+        });
     }, intervalMs);
 }
 

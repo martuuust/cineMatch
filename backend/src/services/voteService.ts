@@ -91,54 +91,45 @@ export class VoteService {
     /**
      * Register a vote from a user
      */
-    submitVote(
+    async submitVote(
         roomCode: string,
         userId: string,
         movieId: number,
         voteType: VoteType
-    ): { vote: Vote; progress: number; hasFinished: boolean } {
-        // Get room
-        const room = dataStore.getRoomByCode(roomCode);
+    ): Promise<{ vote: Vote; progress: number; hasFinished: boolean }> {
+        const room = await dataStore.getRoomByCode(roomCode);
         if (!room) {
             throw new AppError('Room not found', ErrorCode.ROOM_NOT_FOUND, 404);
         }
 
-        // Check room status
         if (room.status !== RoomStatus.VOTING) {
             throw new AppError('Voting has not started or has finished', ErrorCode.VOTING_NOT_STARTED);
         }
 
-        // Verify user belongs to room
-        const user = dataStore.getUserById(userId);
+        const user = await dataStore.getUserById(userId);
         if (!user || user.roomId !== room.id) {
             throw new AppError('User not found in room', ErrorCode.USER_NOT_FOUND, 404);
         }
 
-        // Check if user already finished
         if (user.hasFinished) {
             throw new AppError('User has already finished voting', ErrorCode.VOTING_ALREADY_FINISHED);
         }
 
-        // Validate movie ID
         if (!room.movieIds.includes(movieId)) {
             throw new AppError('Invalid movie ID', ErrorCode.INVALID_MOVIE);
         }
 
-        // Check for duplicate vote
-        if (dataStore.hasUserVotedForMovie(userId, movieId)) {
+        if (await dataStore.hasUserVotedForMovie(userId, movieId)) {
             throw new AppError('Already voted for this movie', ErrorCode.DUPLICATE_VOTE);
         }
 
-        // Create vote
-        const vote = dataStore.createVote(userId, room.id, movieId, voteType);
+        const vote = await dataStore.createVote(userId, room.id, movieId, voteType);
 
-        // Calculate progress
-        const voteCount = dataStore.getUserVoteCount(userId);
+        const voteCount = await dataStore.getUserVoteCount(userId);
         const progress = calculateProgress(voteCount, this.totalMovies);
         const hasFinished = voteCount >= this.totalMovies;
 
-        // Update user progress
-        dataStore.updateUserProgress(userId, progress, hasFinished);
+        await dataStore.updateUserProgress(userId, progress, hasFinished);
 
         return { vote, progress, hasFinished };
     }
@@ -188,14 +179,14 @@ export class VoteService {
     /**
      * Calculate matching results for a room
      */
-    calculateResults(roomId: string): MatchingCompletePayload {
-        const room = dataStore.getRoomById(roomId);
+    async calculateResults(roomId: string): Promise<MatchingCompletePayload> {
+        const room = await dataStore.getRoomById(roomId);
         if (!room) {
             throw new AppError('Room not found', ErrorCode.ROOM_NOT_FOUND, 404);
         }
 
-        const users = dataStore.getUsersByRoom(roomId);
-        const votes = dataStore.getVotesByRoom(roomId);
+        const users = await dataStore.getUsersByRoom(roomId);
+        const votes = await dataStore.getVotesByRoom(roomId);
         const totalVoters = users.length;
 
         // Aggregate votes per movie
@@ -306,8 +297,8 @@ export class VoteService {
     /**
      * Get user's current progress
      */
-    getUserProgress(userId: string): { progress: number; hasFinished: boolean } {
-        const user = dataStore.getUserById(userId);
+    async getUserProgress(userId: string): Promise<{ progress: number; hasFinished: boolean }> {
+        const user = await dataStore.getUserById(userId);
         if (!user) {
             throw new AppError('User not found', ErrorCode.USER_NOT_FOUND, 404);
         }
