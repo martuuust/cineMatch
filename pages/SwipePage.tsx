@@ -228,9 +228,7 @@ const SwipePage: React.FC = () => {
     setShowInfo(false);
 
     // Submit vote in background
-    submitVote(movieId, voteType).catch(err => {
-      console.error('Vote submission failed:', err);
-    });
+    submitVote(movieId, voteType);
   };
 
   const handleButtonVote = (voteType: 'yes' | 'no') => {
