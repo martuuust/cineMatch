@@ -21,7 +21,7 @@ RUN apk add --no-cache gettext
 
 COPY docker/nginx.conf.template /etc/nginx/templates/default.conf.template
 COPY docker/entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+RUN sed -i 's/\r$//' /entrypoint.sh && chmod +x /entrypoint.sh
 
 COPY --from=builder /app/dist /usr/share/nginx/html
 
