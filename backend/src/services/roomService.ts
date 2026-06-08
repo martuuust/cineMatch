@@ -180,11 +180,14 @@ export class RoomService {
         // If no users, return false
         if (users.length === 0) return false;
 
-        // Check if every user has strictly finished
-        // We do NOT count disconnected users as finished, effectively pausing the room until they reconnect
-        const allFinished = users.every(u => u.hasFinished);
+        // Filter users who are currently connected
+        const connectedUsers = users.filter(u => u.socketId !== null);
 
-        return allFinished;
+        // If all registered users are disconnected, return false
+        if (connectedUsers.length === 0) return false;
+
+        // Check if every connected user has finished
+        return connectedUsers.every(u => u.hasFinished);
     }
 
     /**

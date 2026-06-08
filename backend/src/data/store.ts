@@ -36,7 +36,8 @@ class DataStore {
             status: RoomStatus.WAITING,
             hostId,
             movieIds,
-            createdAt: new Date()
+            createdAt: new Date(),
+            lastActiveAt: new Date()
         };
 
         this.rooms.set(roomId, room);
@@ -56,10 +57,15 @@ class DataStore {
         return roomId ? this.rooms.get(roomId) : undefined;
     }
 
+    getAllRooms(): Room[] {
+        return Array.from(this.rooms.values());
+    }
+
     updateRoomStatus(roomId: string, status: RoomStatus): boolean {
         const room = this.rooms.get(roomId);
         if (!room) return false;
         room.status = status;
+        room.lastActiveAt = new Date();
         return true;
     }
 
@@ -110,6 +116,11 @@ class DataStore {
         this.usersByRoom.get(roomId)?.add(userId);
         this.votesByUser.set(userId, new Set());
 
+        const room = this.rooms.get(roomId);
+        if (room) {
+            room.lastActiveAt = new Date();
+        }
+
         return user;
     }
 
@@ -146,6 +157,11 @@ class DataStore {
             this.userBySocket.set(socketId, userId);
         }
 
+        const room = this.rooms.get(user.roomId);
+        if (room) {
+            room.lastActiveAt = new Date();
+        }
+
         return true;
     }
 
@@ -154,12 +170,19 @@ class DataStore {
         if (!user) return false;
         user.progress = progress;
         user.hasFinished = hasFinished;
+
+        const room = this.rooms.get(user.roomId);
+        if (room) {
+            room.lastActiveAt = new Date();
+        }
         return true;
     }
 
     deleteUser(userId: string): boolean {
         const user = this.users.get(userId);
         if (!user) return false;
+
+        const roomId = user.roomId;
 
         // Clean up socket mapping
         if (user.socketId) {
@@ -179,6 +202,11 @@ class DataStore {
         this.votesByUser.delete(userId);
 
         this.users.delete(userId);
+
+        const room = this.rooms.get(roomId);
+        if (room) {
+            room.lastActiveAt = new Date();
+        }
         return true;
     }
 
@@ -199,6 +227,11 @@ class DataStore {
         this.votes.set(voteId, vote);
         this.votesByRoom.get(roomId)?.add(voteId);
         this.votesByUser.get(userId)?.add(voteId);
+
+        const room = this.rooms.get(roomId);
+        if (room) {
+            room.lastActiveAt = new Date();
+        }
 
         return vote;
     }

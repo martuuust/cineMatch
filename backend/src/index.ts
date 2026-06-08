@@ -9,6 +9,7 @@ import { Server as SocketServer } from 'socket.io';
 import { createApp } from './app';
 import { config } from './config';
 import { setupSocketHandlers } from './socket/socketHandler';
+import { startCleanupService } from './services/cleanupService';
 
 // Create Express app
 const app = createApp();
@@ -19,11 +20,7 @@ const server = http.createServer(app);
 // Create Socket.io server
 const io = new SocketServer(server, {
     cors: {
-        origin: (origin, callback) => {
-            // Allow any origin and reflect it back for credentials support
-            if (!origin) return callback(null, true);
-            callback(null, origin);
-        },
+        origin: config.corsOrigin,
         methods: ['GET', 'POST'],
         credentials: true
     },
@@ -37,6 +34,9 @@ setupSocketHandlers(io);
 // Start server
 const HOST = '0.0.0.0';
 server.listen(config.port, HOST, () => {
+    // Start background room cleanup service
+    startCleanupService();
+
     console.log('');
     console.log('🎬 ═══════════════════════════════════════════════════════');
     console.log('   CineMatch Backend Server');

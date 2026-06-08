@@ -201,7 +201,7 @@ export class TMDBService {
             // 2. If that page is empty (out of bounds), use the total_pages info from response to pick a valid random page
             // 3. Fallback to page 1 as last resort
 
-            let page = Math.floor(Math.random() * 20) + 1;
+            const page = Math.floor(Math.random() * 20) + 1;
             console.log(`[TMDB] Genres: ${genreIds.join(',')}, Trying random page: ${page}`);
 
             let url = `${this.baseUrl}/discover/movie?api_key=${this.apiKey}&language=es-ES&with_genres=${genreParam}&sort_by=popularity.desc&include_adult=false&include_video=false&page=${page}`;

@@ -35,6 +35,7 @@ export interface Room {
     hostId: string;
     movieIds: number[];
     createdAt: Date;
+    lastActiveAt: Date;
 }
 
 export interface Vote {
