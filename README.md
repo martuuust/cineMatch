@@ -29,8 +29,10 @@ Ubicado en el directorio `/backend`.
 ## 🚀 Cómo ejecutar el proyecto
 
 ### Opción Recomendada (Windows)
-Simplemente haz doble clic en el archivo `start-app.bat` ubicado en la raíz del proyecto.
-Este script abrirá automáticamente dos ventanas de terminal: una para el backend y otra para el frontend.
+Haz doble clic en `start-app.bat` en la raíz del proyecto.
+
+- **Con Docker Desktop activo**: levanta Redis, backend y frontend con `docker compose up --build`.
+- **Sin Docker**: abre dos terminales con `npm run dev` (necesitas Redis en `localhost:6379`).
 
 ### Opción Manual
 Si prefieres hacerlo manualmente o estás en otro sistema operativo:
@@ -69,8 +71,46 @@ El backend debe estar corriendo primero.
 ---
 
 ## 🐳 Docker
-Actualmente el proyecto **no cuenta con contenedores Docker**.
-Para su despliegue o ejecución, se depende del entorno local de Node.js. Si se desea dockerizar en el futuro, se requeriría crear un `Dockerfile` para el frontend (build de producción con nginx/serve) y otro para el backend, orquestados mediante un `docker-compose.yml`.
+
+Levanta Redis, backend y frontend con un solo comando:
+
+```bash
+# Opcional: películas reales desde TMDB
+cp .env.docker.example .env
+# Edita .env y añade tu TMDB_API_KEY
+
+docker compose up --build
+```
+
+| Servicio  | URL                      |
+|-----------|--------------------------|
+| Frontend  | http://localhost:5173    |
+| Backend   | http://localhost:3001    |
+| Redis     | localhost:6379           |
+
+Para detener y eliminar contenedores:
+
+```bash
+docker compose down
+```
+
+Para detener y borrar también los datos de Redis:
+
+```bash
+docker compose down -v
+```
+
+## Despliegue en Render
+
+1. Sube el código a GitHub (`git push`).
+2. En [Render](https://render.com) → **New** → **Blueprint** → conecta el repo.
+3. Render crea Redis, backend y frontend desde `render.yaml`.
+4. En el servicio **cinematch-backend**, añade `TMDB_API_KEY` (opcional).
+5. Tras el primer deploy, verifica que `FRONTEND_URL` en el backend apunte al dominio del frontend (Render lo enlaza automáticamente vía Blueprint).
+
+## CI
+
+Cada push a `main` ejecuta lint, tests y build (backend + frontend + Docker) en GitHub Actions (`.github/workflows/ci.yml`).
 
 ## 📂 Estructura de Carpetas
 
@@ -81,7 +121,7 @@ cineMatch/
 │   │   ├── controllers/ # Controladores REST (opcional)
 │   │   ├── services/    # Lógica de negocio (Rooms, Users, Votes)
 │   │   ├── socket/      # Manejadores de eventos Socket.io
-│   │   ├── data/        # Almacenamiento en memoria
+│   │   ├── data/        # DataStore (Redis)
 │   │   └── ...
 ├── components/         # Componentes React reutilizables
 ├── context/            # Estado global (AppContext)

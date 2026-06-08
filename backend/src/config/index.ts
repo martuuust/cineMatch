@@ -28,7 +28,10 @@ function validateConfig(): Config {
     const nodeEnv = process.env.NODE_ENV || 'development';
     const isTest = nodeEnv === 'test';
     const isDevelopment = nodeEnv === 'development';
-    const corsOrigin = process.env.FRONTEND_URL || process.env.CORS_ORIGIN || 'http://localhost:5173';
+    const rawCorsOrigin = process.env.FRONTEND_URL || process.env.CORS_ORIGIN || 'http://localhost:5173';
+    const corsOrigin = rawCorsOrigin.startsWith('http')
+        ? rawCorsOrigin
+        : `https://${rawCorsOrigin}`;
     const tmdbApiKey = process.env.TMDB_API_KEY || '';
     const tmdbBaseUrl = process.env.TMDB_BASE_URL || 'https://api.themoviedb.org/3';
 
