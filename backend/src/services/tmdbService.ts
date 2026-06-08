@@ -63,7 +63,9 @@ export class TMDBService {
     constructor() {
         this.apiKey = config.tmdb.apiKey;
         this.baseUrl = config.tmdb.baseUrl;
-        console.log('[TMDBService] Initialized with API Key present:', this.isConfigured());
+        if (config.nodeEnv !== 'test') {
+            console.log('[TMDBService] Initialized with API Key present:', this.isConfigured());
+        }
     }
 
     /**

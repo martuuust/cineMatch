@@ -9,7 +9,7 @@ import { Server as SocketServer } from 'socket.io';
 import { createApp } from './app';
 import { config } from './config';
 import { setupSocketHandlers } from './socket/socketHandler';
-import { startCleanupService } from './services/cleanupService';
+import { startCleanupService, stopCleanupService } from './services/cleanupService';
 
 // Create Express app
 const app = createApp();
@@ -69,20 +69,16 @@ server.listen(config.port, HOST, () => {
 });
 
 // Graceful shutdown
-process.on('SIGTERM', () => {
-    console.log('SIGTERM received. Shutting down gracefully...');
+function shutdown(signal: string): void {
+    console.log(`${signal} received. Shutting down gracefully...`);
+    stopCleanupService();
     server.close(() => {
         console.log('Server closed.');
         process.exit(0);
     });
-});
+}
 
-process.on('SIGINT', () => {
-    console.log('SIGINT received. Shutting down...');
-    server.close(() => {
-        console.log('Server closed.');
-        process.exit(0);
-    });
-});
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));
 
 export { server, io };

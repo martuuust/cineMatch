@@ -11,11 +11,11 @@ dotenv.config(); // Look in current directory first
 const envPath = path.join(process.cwd(), '.env');
 dotenv.config({ path: envPath });
 
-console.log(`[Config] Running in ${process.env.NODE_ENV || 'development'} mode`);
-
 interface Config {
     port: number;
     nodeEnv: string;
+    isDevelopment: boolean;
+    isTest: boolean;
     corsOrigin: string;
     tmdb: {
         apiKey: string;
@@ -26,6 +26,8 @@ interface Config {
 function validateConfig(): Config {
     const port = parseInt(process.env.PORT || '3001', 10);
     const nodeEnv = process.env.NODE_ENV || 'development';
+    const isTest = nodeEnv === 'test';
+    const isDevelopment = nodeEnv === 'development';
     const corsOrigin = process.env.FRONTEND_URL || process.env.CORS_ORIGIN || 'http://localhost:5173';
     const tmdbApiKey = process.env.TMDB_API_KEY || '';
     const tmdbBaseUrl = process.env.TMDB_BASE_URL || 'https://api.themoviedb.org/3';
@@ -37,6 +39,8 @@ function validateConfig(): Config {
     return {
         port,
         nodeEnv,
+        isDevelopment,
+        isTest,
         corsOrigin,
         tmdb: {
             apiKey: tmdbApiKey,
@@ -46,3 +50,7 @@ function validateConfig(): Config {
 }
 
 export const config = validateConfig();
+
+if (!config.isTest) {
+    console.log(`[Config] Running in ${config.nodeEnv} mode`);
+}

@@ -4,6 +4,7 @@
  */
 
 import { Router } from 'express';
+import { dataStore } from '../data/store';
 import roomRoutes from './roomRoutes';
 import movieRoutes from './movieRoutes';
 
@@ -15,9 +16,16 @@ router.use('/movies', movieRoutes);
 
 // Health check
 router.get('/health', (_req, res) => {
+    const stats = dataStore.getRoomStats();
     res.status(200).json({
         status: 'ok',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        uptime: Math.floor(process.uptime()),
+        stats: {
+            rooms: stats.rooms,
+            users: stats.users,
+            votes: stats.votes
+        }
     });
 });
 

@@ -48,6 +48,22 @@ describe('Express Application Hardening & Integration', () => {
         });
     });
 
+    describe('Health Check', () => {
+        it('should return status, uptime and memory stats', async () => {
+            const res = await request(app).get('/api/health');
+
+            expect(res.status).toBe(200);
+            expect(res.body.status).toBe('ok');
+            expect(res.body.timestamp).toBeDefined();
+            expect(typeof res.body.uptime).toBe('number');
+            expect(res.body.stats).toEqual({
+                rooms: expect.any(Number),
+                users: expect.any(Number),
+                votes: expect.any(Number)
+            });
+        });
+    });
+
     describe('Request Rate Limiting - SEC-3.1, SEC-3.2', () => {
         it('should allow requests within rate limit but block the 101st request', async () => {
             // Get a completely fresh app instance to isolate the rate limiter memory

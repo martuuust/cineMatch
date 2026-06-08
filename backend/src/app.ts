@@ -13,12 +13,12 @@ import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 export function createApp(): Application {
     const app = express();
 
-    // 0. Emergency Debug Logger (TOP of stack)
-    app.use((req, _res, next) => {
-        console.log(`[DEBUG] ${req.method} ${req.url}`);
-        console.log(`[DEBUG] Headers: ${JSON.stringify(req.headers)}`);
-        next();
-    });
+    if (config.isDevelopment) {
+        app.use((req, _res, next) => {
+            console.log(`[HTTP] ${req.method} ${req.url}`);
+            next();
+        });
+    }
 
     // 1. Security Headers via Helmet
     app.use(helmet());
